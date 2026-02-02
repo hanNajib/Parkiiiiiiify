@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('area_parkirs', function (Blueprint $table) {
+        Schema::create('area_parkir', function (Blueprint $table) {
             $table->id();
+            $table->string('nama');
+            $table->string('lokasi');
+            $table->integer('kapasitas');
+            $table->integer('terisi')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

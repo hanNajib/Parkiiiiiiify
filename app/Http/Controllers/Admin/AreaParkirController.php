@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\AreaParkir;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class AreaParkirController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $data = AreaParkir::search()->latest()->paginate(10)->withQueryString();
+        $stats = [
+            'total_area_parkir' => AreaParkir::count(),
+            'total_kapasitas' => AreaParkir::sum('kapasitas'),
+            'total_terisi' => AreaParkir::sum('terisi'),
+            'total_kosong' => AreaParkir::sum('kapasitas') - AreaParkir::sum('terisi'),
+        ];
+
+        return Inertia::render('_admin/area_parkir/Index', [
+            'areaParkir' => $data,
+            'stats' => $stats,
+            'filter' => request()->only(['s'])
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $attributes = $request->validate([
+            'nama' => 'required',
+            'lokasi' => 'required',
+            'kapasitas' => 'required|integer',
+            'is_active' => 'required|boolean',
+        ]);
+
+        AreaParkir::create($attributes);
+
+        return redirect()->route('area-parkir.index')->with('success', 'Area Parkir berhasil ditambahkan.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $attributes = $request->validate([
+            'nama' => 'required',
+            'lokasi' => 'required',
+            'kapasitas' => 'required|integer',
+            'is_active' => 'required|boolean',
+        ]);
+
+        $areaParkir = AreaParkir::findOrFail($id);
+        $areaParkir->update($attributes);
+
+        return redirect()->route('area-parkir.index')->with('success', 'Area Parkir berhasil diupdate.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $areaParkir = AreaParkir::findOrFail($id);
+        $areaParkir->delete();
+
+        return redirect()->route('area-parkir.index')->with('success', 'Area Parkir berhasil dihapus.');
+    }
+}

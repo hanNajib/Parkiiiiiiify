@@ -161,27 +161,44 @@ export const SidebarLink = ({
   className?: string;
 }) => {
   const { open, animate } = useSidebar();
-  const [isOpen, setIsOpen] = useState(false);
   const { url } = usePage();
   const isActive = url === link.href || url.startsWith(link.href + "/");
+  
+  const hasActiveSubItem = link.items?.some(
+    (subLink) => url === subLink.href || url.startsWith(subLink.href + "/")
+  );
+  
+  const [isOpen, setIsOpen] = useState(hasActiveSubItem || false);
+
+  React.useEffect(() => {
+    if (hasActiveSubItem) {
+      setIsOpen(true);
+    }
+  }, [hasActiveSubItem]);
+
+  const motionProps = {
+    animate: {
+      display: animate ? (open ? "inline-block" : "none") : "inline-block",
+      opacity: animate ? (open ? 1 : 0) : 1,
+    },
+  };
+
+  const linkBaseClasses = cn(
+    "flex items-center gap-2 group/sidebar py-2 px-2 rounded-md",
+    "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all"
+  );
 
   if (link.items && link.items.length > 0) {
     return (
       <div className={cn("overflow-hidden", className)} {...props}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            "flex items-center justify-between gap-2 group/sidebar py-2 px-2 w-full rounded-md",
-            "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all"
-          )}
+          className={cn(linkBaseClasses, "justify-between w-full")}
         >
           <div className="flex items-center gap-2">
             {link.icon}
             <motion.span
-              animate={{
-                display: animate ? (open ? "inline-block" : "none") : "inline-block",
-                opacity: animate ? (open ? 1 : 0) : 1,
-              }}
+              {...motionProps}
               className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre !p-0 !m-0"
             >
               {link.label}
@@ -189,8 +206,7 @@ export const SidebarLink = ({
           </div>
           <motion.span
             animate={{
-              display: animate ? (open ? "inline-block" : "none") : "inline-block",
-              opacity: animate ? (open ? 1 : 0) : 1,
+              ...motionProps.animate,
               rotate: isOpen ? 180 : 0,
             }}
             className="text-neutral-500"
@@ -222,11 +238,7 @@ export const SidebarLink = ({
               className="flex flex-col gap-1 pl-6 mt-1"
             >
               {link.items.map((subLink, idx) => (
-                <SidebarLink
-                  key={idx}
-                  link={subLink}
-                  className="text-sm"
-                />
+                <SidebarLink key={idx} link={subLink} className="text-sm" />
               ))}
             </motion.div>
           )}
@@ -241,21 +253,16 @@ export const SidebarLink = ({
         <Link
           href={link.href}
           className={cn(
-            "flex justify-start items-center gap-2 group/sidebar py-2 px-2",
-            "text-sidebar-foreground rounded-md transition-all",
-            "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            isActive &&
-            "font-medium bg-sidebar-accent text-primary shadow-none",
+            linkBaseClasses,
+            "justify-start",
+            isActive && "font-medium bg-sidebar-accent text-primary shadow-none",
             className
           )}
           {...props}
         >
           {link.icon}
           <motion.span
-            animate={{
-              display: animate ? (open ? "inline-block" : "none") : "inline-block",
-              opacity: animate ? (open ? 1 : 0) : 1,
-            }}
+            {...motionProps}
             className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre !p-0 !m-0"
           >
             {link.label}

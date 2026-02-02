@@ -22,6 +22,7 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
     role: string;
     [key: string]: unknown; 
 }
@@ -51,6 +52,7 @@ export interface PageProps {
 }
 
 export interface PaginatedData<T> {
+    length: number;
     data: T[];
     current_page: number;
     last_page: number;
@@ -63,4 +65,19 @@ export interface PaginatedData<T> {
         label: string;
         active: boolean;
     }>;
+}
+
+
+// Data Model
+export interface AreaParkir {
+    id: number;
+    nama: string;
+    lokasi: string;
+    kapasitas: number;
+    terisi: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    [key: string]: unknown;
 }

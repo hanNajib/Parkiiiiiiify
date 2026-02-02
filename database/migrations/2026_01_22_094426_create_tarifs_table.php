@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tarifs', function (Blueprint $table) {
+        Schema::create('tarif', function (Blueprint $table) {
             $table->id();
+            $table->enum('rule_type', ['flat', 'per_jam']);
+            $table->decimal('price', 10, 0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

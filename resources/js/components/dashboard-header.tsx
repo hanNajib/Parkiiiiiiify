@@ -2,7 +2,7 @@ import { Head } from "@inertiajs/react";
 import { ReactNode } from "react";
 
 
-export default function DashboardHeader({ children, title, description }: { children: ReactNode, title: string, description: string }) {
+export default function DashboardHeader({ children, title, description }: { children?: ReactNode, title: string, description: string }) {
     return (
         <>
             <Head title={title} />
@@ -15,7 +15,7 @@ export default function DashboardHeader({ children, title, description }: { chil
                         {description}
                     </p>
                 </div>
-                {children}
+                {children || ''}
             </div>
         </>
     )

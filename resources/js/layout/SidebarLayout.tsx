@@ -30,7 +30,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
       <FlashMessage />
       <div className="flex w-full h-screen flex-1 flex-col overflow-hidden md:flex-row bg-muted/40">
         <SidebarBody className="justify-between gap-10" initial={false}>
-          {/* Sidebar Header */}
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             <div
               className={cn(
@@ -48,7 +47,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
               )}
             </div>
 
-            {/* Sidebar Links */}
             <nav className="flex flex-col gap-1">
               {filteredLinks.map((link, idx) => (
                 <SidebarLink key={idx} link={link} />
@@ -56,7 +54,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
             </nav>
           </div>
 
-          {/* Sidebar Footer */}
           <div className="mt-auto">
             <NavUser />
           </div>

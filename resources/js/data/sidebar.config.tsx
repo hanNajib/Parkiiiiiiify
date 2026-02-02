@@ -4,6 +4,8 @@ import { CarFront, FileText, LayoutDashboard, ParkingSquare, User } from "lucide
 import { dashboard } from "@/routes";
 import users from "@/routes/users";
 import kendaraan from "@/routes/kendaraan";
+import areaParkir from "@/routes/area-parkir";
+import tarifParkir from "@/routes/tarif-parkir";
 
 export interface SidebarLink {
   label: string;
@@ -40,12 +42,12 @@ export const links: SidebarLink[] = [
     items: [
       {
         label: "Tarif Parkir",
-        href: '/tarif-parkir',
+        href: tarifParkir.index().url,
         role: '*',
       },
       {
         label: "Area Parkir",
-        href: '/area-parkir',
+        href: areaParkir.index().url,
         role: '*',
       },
     ]
