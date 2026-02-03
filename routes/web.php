@@ -18,8 +18,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('kendaraan', KendaraanController::class);
         Route::resource('area-parkir', AreaParkirController::class)->except(['create', 'edit', 'show']);
         Route::resource('tarif-parkir', TarifParkirController::class);
-        Route::prefix('tarif-parkir')->group(function() {
-            Route::get('area/{areaParkir}', [TarifParkirController::class, 'area'])->name('tarif-parkir.area');
+        Route::prefix('tarif-parkir')->name('tarif-parkir.')->group(function() {
+            Route::get('area/{areaParkir}', [TarifParkirController::class, 'area'])->name('area');
         });
     });
 });

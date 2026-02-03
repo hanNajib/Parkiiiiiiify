@@ -126,7 +126,11 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                         {area.terisi} / {area.kapasitas}
                       </td>
                       <td className="px-6 py-4">
-                        <Badge className='bg-green-500 text-white'>Lengkap</Badge>
+                        {area.tarif_lengkap ? (
+                          <Badge className='bg-green-500 text-white cursor-pointer' title='Tarif Parkir Sudah Lengkap'>Lengkap</Badge>
+                        ) : (
+                        <Badge className='bg-red-500 text-white cursor-pointer' title='Silahkan Lengkapi Tarif Parkir'>Belum Lengkap</Badge>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {new Date(area.created_at).toLocaleDateString('en-US', {

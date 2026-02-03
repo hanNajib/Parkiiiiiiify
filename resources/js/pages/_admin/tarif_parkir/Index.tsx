@@ -7,6 +7,9 @@ import DashboardHeader from '@/components/dashboard-header'
 import { Box, CarFront, Database, Gauge, HardDrive, MapPinIcon, ParkingSquareIcon, UsersIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useState } from 'react'
+import { Link } from '@inertiajs/react'
+import areaParkir from '@/routes/area-parkir'
+import tarifParkir from '@/routes/tarif-parkir'
 
 interface Props {
     areaParkir: PaginatedData<AreaParkir>;
@@ -39,7 +42,11 @@ export default function Index({ areaParkir, filter }: Props) {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <AreaParkirCard />
+                    {areaParkir.data.length > 0 ? areaParkir.data.map((area) => (
+                      <AreaParkirCard area={area} />
+                    )) : (
+                      <p className="text-center text-muted-foreground col-span-3">Tidak ada area parkir ditemukan.</p>
+                    )}
                 </div>
 
                 <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
@@ -67,22 +74,19 @@ export default function Index({ areaParkir, filter }: Props) {
     )
 }
 
-function AreaParkirCard() {
-  const isFull = true
-
+function AreaParkirCard({area}: {area: AreaParkir}) {
+  const isCompleted = area.tarif_lengkap;
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      
-      {/* Header */}
+    <Link href={tarifParkir.area(area.id).url} className="group cursor-pointer relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-card-foreground">
-            Masyarakat
+            {area.nama}
           </h3>
 
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPinIcon className="h-4 w-4" />
-            <span>timurnya sungai</span>
+            <span>{area.lokasi}</span>
           </div>
         </div>
 
@@ -93,22 +97,20 @@ function AreaParkirCard() {
 
       <div className="my-4 h-px bg-border" />
 
-      {/* Footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground" title='Kapasitas Parkir'>
           <CarFront className="h-4 w-4" />
           <span>
-            100
+            {area.kapasitas}
           </span>
         </div>
 
-        <Badge title={isFull ? "Segera Lengkapi Tarif Parkir" : "Semua Tarif Parkir Sudah Lengkap"}
-          variant={isFull ? "destructive" : "default"}
-          className="rounded-full px-3"
+        <Badge title={isCompleted ? "Segera Lengkapi Tarif Parkir" : "Semua Tarif Parkir Sudah Lengkap"}
+          className={`rounded-full px-3 ${isCompleted ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
         >
-          {isFull ? "Tarif Tidak Lengkap" : "Tarif Lengkap"}
+          {isCompleted ? "Tarif Lengkap" : "Tarif Belum Lengkap"}
         </Badge>
       </div>
-    </div>
+    </Link>
   )
 }

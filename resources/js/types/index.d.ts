@@ -79,5 +79,15 @@ export interface AreaParkir {
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
+    tarif_lengkap: boolean;
+    [key: string]: unknown;
+}
+
+export interface Tarif {
+    id: number;
+    rule_type: 'flat' | 'per_jam';
+    price: number;
+    jenis_kendaraan: 'motor'| 'mobil' | 'lainnya';
+    is_active: boolean;
     [key: string]: unknown;
 }
