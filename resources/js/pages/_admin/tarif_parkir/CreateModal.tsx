@@ -1,13 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Field, FieldGroup } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IconPlus, IconLoader2 } from "@tabler/icons-react";
 import { useForm } from "@inertiajs/react";
 import { FormEventHandler, useState, useMemo } from "react";
-import areaParkirRoute from "@/routes/area-parkir";
 import tarifParkir from "@/routes/tarif-parkir";
 import { Tarif } from "@/types";
 
@@ -21,17 +20,14 @@ export default function CreateModal({idArea, existingTarif} : {idArea: number, e
         area_parkir_id: idArea
     });
     
-    // Menghitung kombinasi yang sudah ada
     const existingCombinations = useMemo(() => {
         return existingTarif.map(t => `${t.jenis_kendaraan}-${t.rule_type}`);
     }, [existingTarif]);
     
-    // Cek apakah kombinasi sudah digunakan
     const isDisabled = (jenisKendaraan: string, ruleType: string) => {
         return existingCombinations.includes(`${jenisKendaraan}-${ruleType}`);
     };
     
-    // Cek apakah kombinasi saat ini sudah ada
     const currentCombinationExists = useMemo(() => {
         if (!data.jenis_kendaraan || !data.rule_type) return false;
         return existingCombinations.includes(`${data.jenis_kendaraan}-${data.rule_type}`);

@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'platerecognizer_api' => env('API_KEY_PLATERECOGNIZER', ''),
+
 ];

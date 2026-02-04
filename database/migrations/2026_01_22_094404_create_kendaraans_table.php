@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('warna');
             $table->string('pemilik');
             $table->foreignId('user_id')->references('id')->on('users');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

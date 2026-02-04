@@ -91,3 +91,16 @@ export interface Tarif {
     is_active: boolean;
     [key: string]: unknown;
 }
+
+export interface Kendaraan {
+    id: number;
+    plat_nomor: string;
+    jenis_kendaraan: 'motor'| 'mobil' | 'lainnya';
+    warna: string;
+    pemilik: string;
+    user_id: number | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    [key: string]: unknown;
+}
