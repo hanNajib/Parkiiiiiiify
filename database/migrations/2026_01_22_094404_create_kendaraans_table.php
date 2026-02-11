@@ -17,8 +17,14 @@ return new class extends Migration
             $table->enum('jenis_kendaraan', ['motor', 'mobil', 'lainnya'])->default('lainnya');
             $table->string('warna');
             $table->string('pemilik');
-            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->softDeletes();
             $table->timestamps();
+            
+            // Indexes for performance
+            $table->unique('plat_nomor');
+            $table->index('jenis_kendaraan');
+            $table->index(['user_id', 'jenis_kendaraan']);
         });
     }
 

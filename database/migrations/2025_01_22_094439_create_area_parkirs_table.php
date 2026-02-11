@@ -20,6 +20,10 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
+            
+            $table->index('nama');
+            $table->index('is_active');
+            $table->index(['is_active', 'terisi', 'kapasitas']);
         });
     }
 

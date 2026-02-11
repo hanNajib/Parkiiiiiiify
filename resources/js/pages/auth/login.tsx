@@ -88,7 +88,6 @@ export default function Login({
               </div>
             </div>
 
-            {/* Buttons */}
             <div className="mt-8 flex gap-3">
               <Button
                 type='submit'

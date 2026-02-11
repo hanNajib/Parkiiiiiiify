@@ -19,7 +19,7 @@ interface AppStore {
 export const useAppStore = create<AppStore>() (
     persist(
         (set, get) => ({
-            sidebarOpen: true,
+            sidebarOpen: false,
             setSidebarOpen: (open) => set({ sidebarOpen: open}),
             toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen})),
 
