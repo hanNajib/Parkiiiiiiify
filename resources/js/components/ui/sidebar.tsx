@@ -114,7 +114,7 @@ export const MobileSidebar = ({
   const { open, setOpen } = useSidebar();
   return (
     <motion.div
-      className="h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-sidebar border-b border-sidebar-border w-full"
+      className="h-16 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-sidebar border-b border-sidebar-border w-full"
       {...props}
     >
       <div className="flex justify-end z-20 w-full">

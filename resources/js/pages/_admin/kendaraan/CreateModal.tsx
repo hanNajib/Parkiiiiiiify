@@ -10,10 +10,13 @@ import { FormEventHandler, useState } from "react";
 import kendaraanRoute from "@/routes/kendaraan";
 import VehicleScanner from "@/components/VehicleScanner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import EditModal from "./EditModal";
+import { Kendaraan } from "@/types";
 
 export default function CreateModal() {
     const [open, setOpen] = useState(false);
     const [scanMessage, setScanMessage] = useState<string>('');
+    const [existingVehicle, setExistingVehicle] = useState<Kendaraan | null>(null);
     const { data, setData, post, processing, errors, reset } = useForm({
         plat_nomor: '',
         jenis_kendaraan: 'mobil',
@@ -28,15 +31,10 @@ export default function CreateModal() {
         existingData?: any;
     }) => {
         if (scanData.exists) {
-            // Kendaraan sudah terdaftar
-            setScanMessage(`Kendaraan dengan plat ${scanData.plat_nomor} sudah terdaftar!`);
-            // Auto-fill dengan data existing untuk referensi
-            setData({
-                plat_nomor: scanData.existingData.plat_nomor,
-                jenis_kendaraan: scanData.existingData.jenis_kendaraan,
-                pemilik: scanData.existingData.pemilik || '',
-                warna: scanData.existingData.warna || '',
-            });
+            // Kendaraan sudah terdaftar - buka EditModal
+            setScanMessage('');
+            setOpen(false); // Tutup CreateModal
+            setExistingVehicle(scanData.existingData); // Set data untuk EditModal
         } else {
             // Kendaraan baru - auto-fill form
             setScanMessage(`Plat nomor ${scanData.plat_nomor} berhasil dideteksi!`);
@@ -67,7 +65,24 @@ export default function CreateModal() {
     };
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <>
+            {/* EditModal untuk kendaraan yang sudah ada */}
+            {existingVehicle && (
+                <EditModal
+                    kendaraan={existingVehicle}
+                    controlled={true}
+                    isOpen={true}
+                    fromScan={true}
+                    onOpenChange={(isOpen: boolean) => {
+                        if (!isOpen) {
+                            setExistingVehicle(null);
+                        }
+                    }}
+                />
+            )}
+            
+            {/* CreateModal untuk kendaraan baru */}
+            <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button variant={'default'} className="group/btn cursor-pointer from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
                     <IconPlus className="h-4 w-4" />
@@ -112,7 +127,6 @@ export default function CreateModal() {
                             )}
                         </Field>
 
-                        {/* Jenis Kendaraan */}
                         <Field>
                             <Label htmlFor="jenis_kendaraan">Jenis Kendaraan</Label>
                             <Select
@@ -134,7 +148,6 @@ export default function CreateModal() {
                             )}
                         </Field>
 
-                        {/* Pemilik */}
                         <Field>
                             <Label htmlFor="pemilik">Pemilik</Label>
                             <Input 
@@ -152,7 +165,6 @@ export default function CreateModal() {
                             )}
                         </Field>
 
-                        {/* Warna */}
                         <Field>
                             <Label htmlFor="warna">Warna</Label>
                             <Input 
@@ -170,7 +182,7 @@ export default function CreateModal() {
                             )}
                         </Field>
                     </div>
-
+    
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline" type="button" disabled={processing}>
@@ -185,5 +197,6 @@ export default function CreateModal() {
                 </form>
             </DialogContent>
         </Dialog>
+        </>
     )
 }

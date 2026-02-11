@@ -15,6 +15,7 @@ import usersRoute from '@/routes/users'
 import { router } from '@inertiajs/react'
 import kendaraanRoute from '@/routes/kendaraan'
 import CreateModal from './CreateModal'
+import EditModal from './EditModal'
 
 interface Props {
   kendaraan: PaginatedData<Kendaraan>
@@ -181,7 +182,7 @@ export default function Index({ kendaraan, stats, filter }: Props) {
                           <DropdownMenuContent>
                             <DropdownMenuGroup>
                               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                              {/* <EditModal kendaraan={kendaraan}></EditModal> */}
+                              <EditModal kendaraan={kendaraan}></EditModal>
                               <ConfirmDelete deleteUrl={usersRoute.destroy(kendaraan.id).url}>
                                 <DropdownMenuItem variant='destructive' onSelect={(e) => e.preventDefault()}>
                                   <Trash/>Hapus

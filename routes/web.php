@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AreaParkirController;
 use App\Http\Controllers\Admin\KendaraanController;
+use App\Http\Controllers\Admin\LogAktivitasController;
 use App\Http\Controllers\Admin\TarifParkirController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
@@ -18,6 +19,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('kendaraan', KendaraanController::class);
         Route::resource('area-parkir', AreaParkirController::class)->except(['create', 'edit', 'show']);
         Route::resource('tarif-parkir', TarifParkirController::class);
+        Route::resource('log-aktivitas', LogAktivitasController::class)->only(['index', 'show', 'destroy']);
         Route::prefix('tarif-parkir')->name('tarif-parkir.')->group(function() {
             Route::get('area/{areaParkir}', [TarifParkirController::class, 'area'])->name('area');
         });

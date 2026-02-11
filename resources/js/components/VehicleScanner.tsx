@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { createWorker } from 'tesseract.js';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { IconCamera, IconLoader2, IconX, IconCheck, IconAlertCircle } from '@tabler/icons-react';
+import { IconCamera, IconLoader2, IconX, IconCheck, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface VehicleScannerProps {
@@ -11,6 +11,7 @@ interface VehicleScannerProps {
         jenis_kendaraan?: string;
         exists?: boolean;
         existingData?: any;
+        auto_detected?: boolean; // 🔥 Tambahan buat deteksi otomatis
     }) => void;
 }
 
@@ -19,8 +20,9 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
     const [scanning, setScanning] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
-    const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+    const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | 'warning'; text: string } | null>(null);
     const [progress, setProgress] = useState<string>('');
+    const [showGuide, setShowGuide] = useState(true); // 🔥 Guide awal
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
@@ -30,6 +32,7 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
         setCapturedImage(null);
         setMessage(null);
         setProgress('');
+        setShowGuide(true);
     };
 
     const startCamera = async () => {
@@ -37,8 +40,9 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     facingMode: 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    // 🔥 RESOLUSI LEBIH TINGGI untuk deteksi kendaraan
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 }
             });
             
@@ -65,6 +69,13 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
     useEffect(() => {
         if (scanning && !capturedImage) {
             startCamera();
+            
+            // 🔥 Auto-hide guide setelah 5 detik
+            const timer = setTimeout(() => {
+                setShowGuide(false);
+            }, 5000);
+            
+            return () => clearTimeout(timer);
         }
         return () => {
             stopCamera();
@@ -83,12 +94,47 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
         if (ctx) {
             ctx.drawImage(video, 0, 0);
             
-            // Convert to blob with high quality for better vehicle detection
+            // 🔥 VALIDASI FOTO SEBELUM DIKIRIM
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Check resolusi minimal
+            if (width < 800 || height < 600) {
+                setMessage({
+                    type: 'warning',
+                    text: '⚠️ Foto terlalu kecil! Minimal 800x600 pixel. Coba ambil ulang dengan jarak lebih dekat.'
+                });
+                return;
+            }
+            
+            // Check aspect ratio (jangan terlalu sempit)
+            const aspectRatio = width / height;
+            if (aspectRatio < 0.5 || aspectRatio > 3) {
+                setMessage({
+                    type: 'warning',
+                    text: '⚠️ Foto terlalu sempit atau terlalu lebar! Ambil foto dengan posisi landscape normal.'
+                });
+                return;
+            }
+            
+            // 🔥 KUALITAS TINGGI (0.95) untuk deteksi kendaraan
             canvas.toBlob((blob) => {
                 if (blob) {
+                    // Check file size
+                    const sizeInKB = blob.size / 1024;
+                    
+                    if (sizeInKB < 100) {
+                        setMessage({
+                            type: 'warning',
+                            text: '⚠️ Kualitas foto terlalu rendah! Pastikan pencahayaan cukup dan fokus jelas.'
+                        });
+                        return;
+                    }
+                    
                     const imageSrc = URL.createObjectURL(blob);
                     setCapturedImage(imageSrc);
                     setScanning(false);
+                    setShowGuide(false);
                     stopCamera();
                     processImage(blob);
                 }
@@ -107,7 +153,7 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
             const preScannedPlate = await scanWithTesseract(imageSrc);
 
             // STEP 2: Siapkan FormData dengan blob langsung
-            setProgress('Mengirim ke server...');
+            setProgress('Mengirim ke server untuk verifikasi...');
             const formData = new FormData();
             formData.append('photo', imageBlob, 'vehicle.jpg');
             
@@ -159,24 +205,54 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
                         exists: true,
                         existingData: data
                     });
+                    
+                    // Tutup dialog setelah 2 detik
+                    setTimeout(() => {
+                        setOpen(false);
+                        resetScanner();
+                    }, 2000);
                 } else {
-                    // Kendaraan baru
-                    setMessage({
-                        type: 'success',
-                        text: `${responseMessage} - Confidence: ${data.confidence}%`
-                    });
-                    onScanComplete({
-                        plat_nomor: data.plat_nomor,
-                        jenis_kendaraan: data.jenis_kendaraan,
-                        exists: false
-                    });
+                    // 🔥 KENDARAAN BARU - CEK AUTO DETECTION
+                    const autoDetected = data.auto_detected !== false && data.jenis_kendaraan;
+                    
+                    if (autoDetected) {
+                        // ✅ Jenis kendaraan terdeteksi otomatis
+                        setMessage({
+                            type: 'success',
+                            text: `${responseMessage} - Confidence: ${data.confidence}%`
+                        });
+                        onScanComplete({
+                            plat_nomor: data.plat_nomor,
+                            jenis_kendaraan: data.jenis_kendaraan,
+                            exists: false,
+                            auto_detected: true
+                        });
+                        
+                        // Tutup dialog setelah 2 detik
+                        setTimeout(() => {
+                            setOpen(false);
+                            resetScanner();
+                        }, 2000);
+                    } else {
+                        // ⚠️ Jenis kendaraan TIDAK terdeteksi - butuh input manual
+                        setMessage({
+                            type: 'warning',
+                            text: `Plat nomor terdeteksi: ${data.plat_nomor} (${data.confidence}%). Namun jenis kendaraan tidak terdeteksi. Silakan pilih jenis kendaraan secara manual.`
+                        });
+                        onScanComplete({
+                            plat_nomor: data.plat_nomor,
+                            jenis_kendaraan: null,
+                            exists: false,
+                            auto_detected: false
+                        });
+                        
+                        // Tutup dialog setelah 3 detik
+                        setTimeout(() => {
+                            setOpen(false);
+                            resetScanner();
+                        }, 3000);
+                    }
                 }
-
-                // Tutup dialog setelah 2 detik
-                setTimeout(() => {
-                    setOpen(false);
-                    resetScanner();
-                }, 2000);
             }
         } catch (error: any) {
             console.error('Scan error:', error);
@@ -227,6 +303,7 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
         setScanning(true);
         setMessage(null);
         setProgress('');
+        setShowGuide(true);
     };
 
     const resetScanner = () => {
@@ -235,6 +312,7 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
         setScanning(false);
         setMessage(null);
         setProgress('');
+        setShowGuide(false);
     };
 
     const handleClose = () => {
@@ -255,11 +333,12 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
             </Button>
 
             <Dialog open={open} onOpenChange={handleClose}>
-                <DialogContent className="h-screen w-screen max-w-none p-0 gap-0 bg-black md:h-auto md:max-w-2xl md:rounded-lg md:p-6">
+                <DialogContent className="h-screen w-screen max-w-none p-0 gap-0 bg-black md:h-auto md:max-w-3xl md:rounded-lg md:p-6">
                     <DialogHeader className="p-4 md:p-0 absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 to-transparent md:relative md:bg-transparent">
                         <DialogTitle className="text-white md:text-foreground">Scan Plat Nomor Kendaraan</DialogTitle>
                         <DialogDescription className="text-gray-200 md:text-muted-foreground">
-                            Arahkan kamera ke plat nomor kendaraan dan ambil foto
+                            {/* 🔥 INSTRUKSI YANG JELAS */}
+                            Ambil foto SELURUH KENDARAAN dari jarak 2-3 meter, bukan close-up plat saja
                         </DialogDescription>
                     </DialogHeader>
 
@@ -276,22 +355,56 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
                                         className="w-full h-full object-cover"
                                     />
                                     
+                                    {/* 🔥 GUIDE YANG LEBIH LUAS - BUKAN FOKUS KE PLAT */}
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="relative w-4/5 max-w-md">
-                                            <div className="border-4 border-green-500 rounded-lg p-4 bg-transparent backdrop-blur-none">
-                                                <div className="aspect-[3/1] border-2 border-dashed border-green-400 rounded flex items-center justify-center">
-                                                    <p className="text-green-400 text-sm font-medium text-center px-2">
-                                                        Posisikan plat nomor di sini
-                                                    </p>
+                                        <div className="relative w-11/12 max-w-2xl">
+                                            {/* Frame untuk SELURUH KENDARAAN */}
+                                            {/* <div className="border-4 border-blue-500 rounded-lg p-2 bg-transparent backdrop-blur-none">
+                                                <div className="aspect-video border-2 border-dashed border-blue-400 rounded flex items-center justify-center">
+                                                    <div className="text-center px-4">
+                                                        <IconCamera className="h-12 w-12 text-blue-400 mx-auto mb-2" />
+                                                        <p className="text-blue-400 text-lg font-bold">
+                                                            Posisikan SELURUH KENDARAAN di sini
+                                                        </p>
+                                                        <p className="text-blue-300 text-sm mt-2">
+                                                            Plat nomor harus terlihat jelas
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            {/* Corner indicators */}
-                                            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-lg"></div>
-                                            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-lg"></div>
-                                            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-lg"></div>
-                                            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-lg"></div>
+                                            </div> */}
+                                            {/* Corner indicators
+                                            <div className="absolute -top-2 -left-2 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
+                                            <div className="absolute -top-2 -right-2 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
+                                            <div className="absolute -bottom-2 -left-2 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
+                                            <div className="absolute -bottom-2 -right-2 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div> */}
                                         </div>
                                     </div>
+
+                                    {/* 🔥 GUIDE OVERLAY yang bisa di-hide */}
+                                    {showGuide && (
+                                        <div className="absolute top-20 left-0 right-0 mx-4 z-30">
+                                            <Alert className="bg-blue-900/90 border-blue-500 backdrop-blur-md">
+                                                <IconInfoCircle className="h-5 w-5 text-blue-300" />
+                                                <AlertDescription className="text-white font-medium">
+                                                    <p className="font-bold mb-2">📸 Tips Foto yang Baik:</p>
+                                                    <ul className="space-y-1 text-sm">
+                                                        <li>✅ Jarak 2-3 meter dari kendaraan</li>
+                                                        <li>✅ Ambil foto SELURUH body kendaraan</li>
+                                                        <li>✅ Plat nomor harus terlihat jelas</li>
+                                                        <li>❌ JANGAN close-up ke plat saja</li>
+                                                    </ul>
+                                                    <Button 
+                                                        size="sm" 
+                                                        variant="ghost" 
+                                                        className="mt-2 text-blue-200 hover:text-white"
+                                                        onClick={() => setShowGuide(false)}
+                                                    >
+                                                        Mengerti, Sembunyikan
+                                                    </Button>
+                                                </AlertDescription>
+                                            </Alert>
+                                        </div>
+                                    )}
                                 </>
                             )}
 
@@ -299,7 +412,7 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
                                 <img
                                     src={capturedImage}
                                     alt="Captured"
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-contain" // 🔥 object-contain biar keliatan semua
                                 />
                             )}
 
@@ -320,11 +433,23 @@ export default function VehicleScanner({ onScanComplete }: VehicleScannerProps) 
                             )}
 
                             {message && (
-                                <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className="bg-black/80 border-white/20 backdrop-blur-md md:bg-background md:border-border">
+                                <Alert 
+                                    variant={message.type === 'error' ? 'destructive' : 'default'} 
+                                    className={`backdrop-blur-md md:bg-background md:border-border ${
+                                        message.type === 'warning' 
+                                            ? 'bg-yellow-900/80 border-yellow-500/50' 
+                                            : 'bg-black/80 border-white/20'
+                                    }`}
+                                >
                                     {message.type === 'success' && <IconCheck className="h-4 w-4 text-white md:text-foreground" />}
                                     {message.type === 'error' && <IconAlertCircle className="h-4 w-4" />}
                                     {message.type === 'info' && <IconAlertCircle className="h-4 w-4 text-white md:text-foreground" />}
-                                    <AlertDescription className="text-white md:text-foreground">{message.text}</AlertDescription>
+                                    {message.type === 'warning' && <IconAlertCircle className="h-4 w-4 text-yellow-300" />}
+                                    <AlertDescription className={`${
+                                        message.type === 'warning' ? 'text-yellow-100' : 'text-white md:text-foreground'
+                                    }`}>
+                                        {message.text}
+                                    </AlertDescription>
                                 </Alert>
                             )}
                         </div>
