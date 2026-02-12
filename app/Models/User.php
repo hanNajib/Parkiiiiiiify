@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
@@ -42,6 +43,20 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function scopeRole($query) {
+        $role = Auth::user()->role;
+        switch ($role) {
+            case 'superadmin':
+                return $query;
+            case 'admin':
+                return $query->where('role', '!=', 'superadmin');
+            case 'petugas':
+                return $query->whereIn('role', ['owner', 'user', 'admin']);
+            default:
+                return $query->where('id', Auth::id());
+        }
+    }
 
     /**
      * Get the attributes that should be cast.

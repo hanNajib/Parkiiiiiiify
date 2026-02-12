@@ -104,3 +104,38 @@ export interface Kendaraan {
     deleted_at: string | null;
     [key: string]: unknown;
 }
+
+export interface LogAktivitas {
+    id: number;
+    user_id: number | null;
+    role: string | null;
+    action: string;
+    description: string | null;
+    target_type: string | null;
+    target_id: number | null;
+    ip_address: string | null;
+    user: User | null;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface Transaksi {
+    id: number;
+    kendaraan_id: number;
+    waktu_masuk: string;
+    waktu_keluar: string | null;
+    tarif_id: number;
+    durasi: number | null;
+    total_biaya: number | null;
+    status: 'ongoing' | 'completed';
+    petugas_id: number;
+    area_parkir_id: number;
+    created_at: string;
+    updated_at: string;
+    kendaraan?: Kendaraan;
+    tarif?: Tarif;
+    petugas?: User;
+    areaParkir?: AreaParkir;
+    [key: string]: unknown;
+}

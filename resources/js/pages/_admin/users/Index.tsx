@@ -2,7 +2,7 @@ import { SidebarLayout } from '@/layout/SidebarLayout'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { IconSearch, IconUser } from '@tabler/icons-react'
+import { IconSearch, IconUser, IconFileSpreadsheet } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PaginatedData, User } from '@/types'
@@ -10,7 +10,7 @@ import DashboardHeader from '@/components/dashboard-header'
 import StatCard from '@/components/StatCard'
 import CreateModal from './CreateModal'
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from '@/components/ui/dropdown-menu'
-import { EllipsisVertical, Trash } from 'lucide-react'
+import { EllipsisVertical, Trash, Download } from 'lucide-react'
 import EditModal from './EditModal'
 import { ConfirmDelete } from '@/components/confirmModal'
 import usersRoute from '@/routes/users'
@@ -27,6 +27,18 @@ export default function Index({ users, filter }: Props) {
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [roleFilter, setRoleFilter] = useState(filter.role || 'all')
 
+  const handleExportExcel = () => {
+    const params = new URLSearchParams()
+    if (roleFilter && roleFilter !== 'all') {
+      params.append('role', roleFilter)
+    }
+    if (searchTerm) {
+      params.append('search', searchTerm)
+    }
+    const queryString = params.toString()
+    const url = `/admin/users/export/excel${queryString ? '?' + queryString : ''}`
+    window.location.href = url
+  }
 
   const filteredUsers = users.data.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,6 +85,14 @@ export default function Index({ users, filter }: Props) {
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              <Button 
+                onClick={handleExportExcel}
+                variant="outline"
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export Excel
+              </Button>
             </div>
           </div>
         </div>

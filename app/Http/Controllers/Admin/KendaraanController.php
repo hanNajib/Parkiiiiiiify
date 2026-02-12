@@ -84,7 +84,23 @@ class KendaraanController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $kendaraan = Kendaraan::findOrFail($id);
+
+        $validated = $request->validate([
+            'plat_nomor' => 'required|string|max:20|unique:kendaraan,plat_nomor,' . $kendaraan->id,
+            'jenis_kendaraan' => 'required|in:mobil,motor,lainnya',
+            'pemilik' => 'nullable|string|max:255',
+            'warna' => 'nullable|string|max:50',
+        ], [
+            'plat_nomor.required' => 'Plat nomor wajib diisi',
+            'plat_nomor.unique' => 'Plat nomor sudah terdaftar',
+            'jenis_kendaraan.required' => 'Jenis kendaraan wajib dipilih',
+            'jenis_kendaraan.in' => 'Jenis kendaraan tidak valid',
+        ]);
+
+        $kendaraan->update($validated);
+
+        return redirect()->back()->with('success', 'Kendaraan berhasil diperbarui');
     }
 
     /**

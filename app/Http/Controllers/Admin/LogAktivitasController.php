@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\LogAktivitas;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LogAktivitasController extends Controller
 {
@@ -12,7 +14,20 @@ class LogAktivitasController extends Controller
      */
     public function index()
     {
-        //
+        $data = LogAktivitas::with(['user'])->search()->filter()->paginate(10)->withQueryString();
+        
+        $stats = [
+            'total_logs' => LogAktivitas::count(),
+            'total_today' => LogAktivitas::whereDate('created_at', today())->count(),
+            'total_admin' => LogAktivitas::where('role', 'admin')->count(),
+            'total_user' => LogAktivitas::where('role', 'user')->count(),
+        ];
+        
+        return Inertia::render('_admin/log_aktivitas/Index', [
+            'logAktivitas' => $data,
+            'filter' => request()->only(['s', 'role', 'action']),
+            'stats' => $stats,
+        ]);
     }
 
     /**

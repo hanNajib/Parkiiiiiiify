@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Exports\UsersExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $user = User::search()->latest()->paginate(10)->withQueryString();
+        $user = User::role()->search()->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('_admin/users/Index', [
             'users' => $user,
@@ -68,5 +70,14 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $filters = $request->only(['role', 'search']);
+        
+        $filename = 'users-' . date('Y-m-d-His') . '.xlsx';
+        
+        return Excel::download(new UsersExport($filters), $filename);
     }
 }

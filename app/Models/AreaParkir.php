@@ -18,6 +18,10 @@ class AreaParkir extends Model
         return $this->hasMany(Tarif::class, 'area_parkir_id');
     }
 
+    public function transaksi() {
+        return $this->hasMany(Transaksi::class, 'area_parkir_id');
+    }
+
     public function getTarifLengkapAttribute() {
         $jenisKendaraan = ['motor', 'mobil', 'lainnya'];
         $ruleTypes = ['flat', 'per_jam'];

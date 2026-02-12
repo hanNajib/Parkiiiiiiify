@@ -59,7 +59,7 @@ class TarifParkirController extends Controller
             Tarif::create($attribute);
             return redirect()->route('tarif-parkir.area', ['areaParkir' => $attribute['area_parkir_id']])->with('success', 'Tarif Parkir Berhasil Ditambahkan');
         } catch (\Exception $e) {
-            return redirect()->route('tarif-parkir.area', ['areaParkirx' => $attribute['area_parkir_id']])->with('error', 'Tarif Parkir Gagal Ditambahkan');
+            return redirect()->route('tarif-parkir.area', ['areaParkir' => $attribute['area_parkir_id']])->with('error', 'Tarif Parkir Gagal Ditambahkan: ' . $e->getMessage());
         }
     }
 

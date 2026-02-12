@@ -13,6 +13,7 @@ import EditModal from './EditModal'
 import { ConfirmDelete } from '@/components/confirmModal'
 import areaParkirRoute from '@/routes/area-parkir'
 import { Badge } from '@/components/ui/badge'
+import { Link } from '@inertiajs/react'
 
 interface Props {
   areaParkir: PaginatedData<AreaParkir>
@@ -151,7 +152,9 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                               <EditModal area={area}></EditModal>
                               <DropdownMenuItem>
-                                <DollarSignIcon/>Tarif Parkir
+                                <Link className='flex items-center justify-center gap-2' href={`/admin/tarif-parkir/area/${area.id}`}>
+                                  <DollarSignIcon/>Tarif Parkir
+                                </Link>
                               </DropdownMenuItem>
                               <ConfirmDelete deleteUrl={areaParkirRoute.destroy(area.id).url}>
                                 <DropdownMenuItem variant='destructive' onSelect={(e) => e.preventDefault()}>
@@ -166,7 +169,7 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center">
+                    <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <IconSearch className="h-12 w-12 text-muted-foreground/50" />
                         <p className="text-sm font-medium text-muted-foreground">
