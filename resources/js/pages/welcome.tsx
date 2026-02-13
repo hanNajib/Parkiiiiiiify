@@ -45,8 +45,9 @@ export default function Welcome() {
         offset: ["start start", "end start"]
     });
 
-    const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
-    const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+    // OPTIMASI #1: Kurangin range parallax biar gak terlalu berat
+    const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+    const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
     const testimonials = [
         {
@@ -155,96 +156,85 @@ export default function Welcome() {
         <>
             <Head title="Parkify - Sistem Manajemen Parkir Modern" />
             
-            <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900">
-                {/* Navigation with Blur Effect */}
+            <div className="min-h-screen bg-linear-to-b lg:px-8 from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900">
+                {/* Navigation - OPTIMASI: Kurangin spring stiffness */}
                 <motion.nav 
                     className="border-b bg-white/50 dark:bg-zinc-950/50 backdrop-blur-lg sticky top-0 z-50"
                     initial={{ y: -100 }}
                     animate={{ y: 0 }}
-                    transition={{ type: "spring", stiffness: 100 }}
+                    transition={{ duration: 0.3 }}
                 >
                     <div className="container mx-auto px-4 py-4">
                         <div className="flex items-center justify-between">
-                            <motion.div 
-                                className="flex items-center gap-2"
-                                whileHover={{ scale: 1.05 }}
-                            >
+                            <div className="flex items-center gap-2">
                                 <Logo />
-                            </motion.div>
+                            </div>
                             <div className="hidden md:flex items-center gap-6">
-                                {['Fitur', 'Cara Kerja', 'Harga', 'Testimoni', 'FAQ'].map((item, index) => (
-                                    <motion.a
+                                {['Fitur', 'Cara Kerja', 'Harga', 'Testimoni', 'FAQ'].map((item) => (
+                                    <a
                                         key={item}
                                         href={`#${item.toLowerCase().replace(' ', '-')}`}
                                         className="text-sm font-medium hover:text-primary transition-colors"
-                                        initial={{ opacity: 0, y: -20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        whileHover={{ y: -2 }}
                                     >
                                         {item}
-                                    </motion.a>
+                                    </a>
                                 ))}
                             </div>
                             <div className="flex items-center gap-4">
                                 <Link href="/login">
-                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button variant="ghost" size="sm">
-                                            Masuk
-                                        </Button>
-                                    </motion.div>
+                                    <Button variant="ghost" size="sm">
+                                        Masuk
+                                    </Button>
                                 </Link>
                                 <Link href="/register">
-                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button size="sm" className="gap-2">
-                                            Daftar Sekarang
-                                            <ChevronRight className="w-4 h-4" />
-                                        </Button>
-                                    </motion.div>
+                                    <Button size="sm" className="gap-2">
+                                        Daftar Sekarang
+                                        <ChevronRight className="w-4 h-4" />
+                                    </Button>
                                 </Link>
                             </div>
                         </div>
                     </div>
                 </motion.nav>
 
-                {/* Hero Section with Parallax */}
-                <section ref={heroRef} className="relative container mx-auto px-4 py-20 md:py-32 overflow-hidden">
+                {/* Hero Section - OPTIMIZED PARALLAX & LAPTOP SCREEN FIT */}
+                <section ref={heroRef} className="relative container mx-auto px-4 py-12 md:py-16 lg:py-20 overflow-hidden">
                     <motion.div style={{ y, opacity }}>
-                        <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                             {/* Left Side - Text Content */}
-                            <div className="space-y-8">
+                            <div className="space-y-6 lg:space-y-8">
                                 <motion.div 
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6 }}
+                                    transition={{ duration: 0.5 }}
                                 >
                                     <Badge className="w-fit gap-1" variant="secondary">
                                         <Sparkles className="w-3 h-3" />
-                                        Laravel 11 + React + TypeScript + shadcn/ui
+                                        Sistem Parkir Pintar & Modern
                                     </Badge>
                                 </motion.div>
                                 
                                 <motion.h1 
-                                    className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight"
+                                    className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-tight"
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2, duration: 0.6 }}
+                                    transition={{ delay: 0.1, duration: 0.5 }}
                                 >
                                     Kelola Parkir dengan{' '}
-                                    <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                                    <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                         Lebih Mudah
                                     </span>
                                     {' '}dan{' '}
-                                    <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                                    <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                         Efisien
                                     </span>
                                 </motion.h1>
                                 
                                 <motion.p 
-                                    className="text-lg md:text-xl text-muted-foreground leading-relaxed"
+                                    className="text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed"
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3, duration: 0.6 }}
+                                    transition={{ delay: 0.2, duration: 0.5 }}
                                 >
                                     PaarkirBang adalah sistem manajemen parkir berbasis web yang membantu Anda 
                                     mengelola multiple area parkir, transaksi kendaraan masuk-keluar, dan menghasilkan 
@@ -252,263 +242,199 @@ export default function Welcome() {
                                 </motion.p>
                                 
                                 <motion.div 
-                                    className="flex flex-wrap gap-4"
+                                    className="flex flex-wrap gap-3 lg:gap-4"
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4, duration: 0.6 }}
+                                    transition={{ delay: 0.3, duration: 0.5 }}
                                 >
                                     <Link href="/register">
-                                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                            <Button size="lg" className="gap-2 text-base px-8">
-                                                Mulai Gratis Sekarang
-                                                <ArrowRight className="w-5 h-5" />
-                                            </Button>
-                                        </motion.div>
-                                    </Link>
-                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button size="lg" variant="outline" className="gap-2 text-base px-8">
-                                            <Play className="w-5 h-5" />
-                                            Lihat Demo
+                                        <Button size="lg" className="gap-2 text-sm md:text-base px-6 lg:px-8">
+                                            Mulai Gratis Sekarang
+                                            <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
                                         </Button>
-                                    </motion.div>
+                                    </Link>
+                                    <Button size="lg" variant="outline" className="gap-2 text-sm md:text-base px-6 lg:px-8">
+                                        <Play className="w-4 h-4 lg:w-5 lg:h-5" />
+                                        Lihat Demo
+                                    </Button>
                                 </motion.div>
                                 
-                                <motion.div 
-                                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.5, duration: 0.6 }}
-                                >
+                                <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                                     <CheckCircle2 className="w-4 h-4 text-green-500" />
                                     <span>Gratis selamanya untuk 1 area parkir</span>
-                                </motion.div>
+                                </div>
                                 
-                                <Separator />
+                                <Separator className="my-4 lg:my-6" />
                                 
-                                <motion.div 
-                                    className="flex flex-wrap items-center gap-6 pt-4"
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.6, duration: 0.6 }}
-                                >
+                                <div className="flex flex-wrap items-center gap-4 lg:gap-6 pt-2 lg:pt-4">
                                     {[
                                         { value: "100+", label: "Area Parkir" },
                                         { value: "5K+", label: "Transaksi/Bulan" },
                                         { value: "4 Role", label: "Multi-Access" }
                                     ].map((stat, index) => (
-                                        <div key={index} className="flex items-center gap-4">
-                                            {index > 0 && <Separator orientation="vertical" className="h-12" />}
+                                        <div key={index} className="flex items-center gap-3 lg:gap-4">
+                                            {index > 0 && <Separator orientation="vertical" className="h-10 lg:h-12" />}
                                             <div>
-                                                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                                                <div className="text-2xl md:text-3xl lg:text-4xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                                     {stat.value}
                                                 </div>
                                                 <div className="text-xs md:text-sm text-muted-foreground font-medium">{stat.label}</div>
                                             </div>
                                         </div>
                                     ))}
-                                </motion.div>
+                                </div>
                             </div>
                             
-                            {/* Right Side - Dashboard Preview RESPONSIVE & FIT SCREEN */}
                             <motion.div 
-                                className="relative w-full h-[450px] md:h-[500px] lg:h-[600px]"
-                                initial={{ opacity: 0, x: 100, scale: 0.8 }}
-                                animate={{ opacity: 1, x: 0, scale: 1 }}
-                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                className="relative w-full h-90 sm:h-105 md:h-112.5 lg:h-120 xl:h-130"
+                                initial={{ opacity: 0, x: 50, y: -100 }}
+                                animate={{ opacity: 1, x: 0, y: -50 }}
+                                transition={{ duration: 0.5 }}
                             >
-                                {/* Animated Background Blob with Parallax */}
-                                <motion.div 
-                                    className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/10 blur-3xl rounded-full"
-                                    animate={{ 
-                                        scale: [1, 1.2, 1],
-                                        rotate: [0, 180, 360]
-                                    }}
-                                    transition={{ 
-                                        duration: 25, 
-                                        repeat: Infinity,
-                                        ease: "linear"
-                                    }}
-                                />
+                                <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
+                                <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl" />
                                 
-                                {/* Main Dashboard Card - PERFECTLY SIZED */}
-                                <motion.div 
-                                    className="relative bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 rounded-2xl p-4 md:p-6 shadow-2xl border-2 border-primary/10 h-full overflow-hidden"
-                                    whileHover={{ scale: 1.02, rotateY: 2 }}
-                                    transition={{ type: "spring", stiffness: 300 }}
-                                >
-                                    <div className="space-y-3 md:space-y-4 h-full">
-                                        {/* Main Stats Card */}
-                                        <motion.div
-                                            initial={{ y: 30, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.4 }}
-                                        >
-                                            <Card className="shadow-lg border-2 hover:shadow-xl transition-shadow">
-                                                <CardHeader className="pb-2 md:pb-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <CardTitle className="text-xs md:text-sm font-medium">Dashboard Overview</CardTitle>
-                                                        <Badge variant="secondary" className="gap-1 text-xs">
-                                                            <TrendingUp className="w-3 h-3" />
-                                                            Live
-                                                        </Badge>
+                                <div className="relative h-full flex items-center justify-center">
+                                    <motion.div
+                                        className="relative z-10"
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ delay: 0.2, duration: 0.6 }}
+                                    >
+                                        <div className="w-64 md:w-72 lg:w-80 p-6 rounded-2xl bg-linear-to-br from-white/90 to-white/50 dark:from-zinc-900/90 dark:to-zinc-900/50 backdrop-blur-xl border border-white/20 dark:border-zinc-700/50 shadow-2xl">
+                                            {/* Live Badge */}
+                                            <div className="flex items-center justify-between mb-5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                    <span className="text-xs font-medium text-green-600 dark:text-green-400">Live Update</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">13 Feb 2026</div>
+                                            </div>
+                                            
+                                            {/* Main Stats */}
+                                            <div className="space-y-4">
+                                                <div className="text-center">
+                                                    <div className="text-5xl md:text-6xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                                                        247
                                                     </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3 md:pb-4">
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="text-sm text-muted-foreground mt-1">Kendaraan Parkir</div>
+                                                </div>
+                                                
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <span className="text-muted-foreground">Kapasitas</span>
+                                                        <span className="font-semibold text-primary">82%</span>
+                                                    </div>
+                                                    <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                                                         <motion.div 
-                                                            className="bg-gradient-to-br from-primary/20 to-primary/5 p-2 md:p-3 rounded-xl"
-                                                            whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
-                                                            transition={{ duration: 0.5 }}
-                                                        >
-                                                            <Car className="w-5 h-5 md:w-7 md:h-7 text-primary" />
-                                                        </motion.div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-xs text-muted-foreground truncate">Total Kendaraan</div>
-                                                            <motion.div 
-                                                                className="text-2xl md:text-3xl font-bold"
-                                                                initial={{ scale: 0 }}
-                                                                animate={{ scale: 1 }}
-                                                                transition={{ delay: 0.6, type: "spring" }}
-                                                            >
-                                                                247
-                                                            </motion.div>
-                                                        </div>
-                                                        <Badge variant="secondary" className="gap-1 text-xs shrink-0">
-                                                            <TrendingUp className="w-3 h-3" />
-                                                            +12%
-                                                        </Badge>
+                                                            className="h-full bg-linear-to-r from-primary to-purple-600"
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: "82%" }}
+                                                            transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
+                                                        />
                                                     </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                        
-                                        {/* Grid Cards PERFECTLY RESPONSIVE */}
-                                        <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                            {[
-                                                { icon: MapPin, label: "Area", value: "12", color: "text-primary", delay: 0.5 },
-                                                { icon: Clock, label: "Avg Time", value: "2.5h", color: "text-primary", delay: 0.6 },
-                                                { icon: DollarSign, label: "Revenue", value: "12M", color: "text-green-500", delay: 0.7 },
-                                                { icon: Users, label: "Occupancy", value: "82%", color: "text-blue-500", delay: 0.8 }
-                                            ].map((item, index) => (
-                                                <motion.div
-                                                    key={index}
-                                                    initial={{ y: 30, opacity: 0, scale: 0.8 }}
-                                                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                                                    transition={{ delay: item.delay, type: "spring", stiffness: 200 }}
-                                                    whileHover={{ y: -5, scale: 1.05 }}
-                                                >
-                                                    <Card className="shadow hover:shadow-lg transition-all">
-                                                        <CardContent className="p-3 md:p-4">
-                                                            <item.icon className={`w-4 h-4 md:w-5 md:h-5 ${item.color} mb-1 md:mb-2`} />
-                                                            <div className="text-[10px] md:text-xs text-muted-foreground truncate">{item.label}</div>
-                                                            <div className="text-lg md:text-2xl font-bold">{item.value}</div>
-                                                        </CardContent>
-                                                    </Card>
-                                                </motion.div>
-                                            ))}
+                                                </div>
+                                                
+                                                {/* Quick Stats Grid */}
+                                                <div className="grid grid-cols-3 gap-3 pt-2">
+                                                    <div className="text-center">
+                                                        <div className="text-2xl font-bold text-zinc-900 dark:text-white">12</div>
+                                                        <div className="text-[10px] text-muted-foreground">Area</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-2xl font-bold text-zinc-900 dark:text-white">2.5h</div>
+                                                        <div className="text-[10px] text-muted-foreground">Avg Time</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-2xl font-bold text-zinc-900 dark:text-white">12M</div>
+                                                        <div className="text-[10px] text-muted-foreground">Revenue</div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        {/* Floating Badges */}
-                                        <motion.div
-                                            className="flex gap-2 flex-wrap"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: 0.9 }}
-                                        >
-                                            {[
-                                                { icon: Shield, label: "2FA" },
-                                                { icon: Zap, label: "Real-time" }
-                                            ].map((badge, index) => (
-                                                <motion.div 
-                                                    key={index}
-                                                    whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                                                >
-                                                    <Badge variant="outline" className="gap-1 text-xs">
-                                                        <badge.icon className="w-3 h-3" />
-                                                        {badge.label}
-                                                    </Badge>
-                                                </motion.div>
-                                            ))}
-                                        </motion.div>
-                                    </div>
-                                </motion.div>
-                                
-                                {/* Floating Orbs with Parallax */}
-                                <motion.div
-                                    className="absolute -top-8 -right-8 w-20 h-20 md:w-32 md:h-32 bg-primary/10 rounded-full blur-2xl"
-                                    animate={{ 
-                                        y: [0, -30, 0],
-                                        x: [0, 20, 0],
-                                        scale: [1, 1.3, 1]
-                                    }}
-                                    transition={{ 
-                                        duration: 6, 
-                                        repeat: Infinity,
-                                        ease: "easeInOut"
-                                    }}
-                                />
-                                <motion.div
-                                    className="absolute -bottom-8 -left-8 w-24 h-24 md:w-40 md:h-40 bg-purple-500/10 rounded-full blur-2xl"
-                                    animate={{ 
-                                        y: [0, 30, 0],
-                                        x: [0, -20, 0],
-                                        scale: [1, 1.2, 1]
-                                    }}
-                                    transition={{ 
-                                        duration: 7, 
-                                        repeat: Infinity,
-                                        ease: "easeInOut",
-                                        delay: 0.5
-                                    }}
-                                />
+                                    </motion.div>
+
+                                    {/* Floating Small Card - Top Left */}
+                                    <motion.div
+                                        className="absolute top-8 left-0 md:left-4"
+                                        initial={{ x: -100, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.4, duration: 0.6 }}
+                                        whileHover={{ y: -8, scale: 1.05 }}
+                                    >
+                                        <div className="w-28 md:w-32 p-4 rounded-xl bg-linear-to-br from-blue-500/90 to-blue-600/90 backdrop-blur-xl border border-white/20 shadow-xl">
+                                            <MapPin className="w-6 h-6 text-white mb-2" />
+                                            <div className="text-2xl font-bold text-white">8</div>
+                                            <div className="text-[10px] text-white/80">Locations</div>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Floating Small Card - Top Right */}
+                                    <motion.div
+                                        className="absolute top-0 right-0 md:right-8"
+                                        initial={{ x: 100, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.5, duration: 0.6 }}
+                                        whileHover={{ y: -8, scale: 1.05 }}
+                                    >
+                                        <div className="w-28 md:w-32 p-4 rounded-xl bg-linear-to-br from-green-500/90 to-green-600/90 backdrop-blur-xl border border-white/20 shadow-xl">
+                                            <TrendingUp className="w-6 h-6 text-white mb-2" />
+                                            <div className="text-2xl font-bold text-white">+18%</div>
+                                            <div className="text-[10px] text-white/80">Growth</div>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Floating Small Card - Bottom Left */}
+                                    <motion.div
+                                        className="absolute bottom-12 left-0 md:left-8"
+                                        initial={{ x: -100, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.6, duration: 0.6 }}
+                                        whileHover={{ y: -8, scale: 1.05 }}
+                                    >
+                                        <div className="w-28 md:w-32 p-4 rounded-xl bg-linear-to-br from-purple-500/90 to-purple-600/90 backdrop-blur-xl border border-white/20 shadow-xl">
+                                            <Clock className="w-6 h-6 text-white mb-2" />
+                                            <div className="text-2xl font-bold text-white">24/7</div>
+                                            <div className="text-[10px] text-white/80">Active</div>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Floating Small Card - Bottom Right */}
+                                    <motion.div
+                                        className="absolute bottom-0 right-0 md:right-4"
+                                        initial={{ x: 100, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.7, duration: 0.6 }}
+                                        whileHover={{ y: -8, scale: 1.05 }}
+                                    >
+                                        <div className="w-28 md:w-32 p-4 rounded-xl bg-linear-to-br from-orange-500/90 to-orange-600/90 backdrop-blur-xl border border-white/20 shadow-xl">
+                                            <Shield className="w-6 h-6 text-white mb-2" />
+                                            <div className="text-2xl font-bold text-white">100%</div>
+                                            <div className="text-[10px] text-white/80">Secure</div>
+                                        </div>
+                                    </motion.div>
+                                </div>
                             </motion.div>
                         </div>
                     </motion.div>
                 </section>
 
-                
-
-                {/* Features Section with Scroll Animations */}
-                <motion.section 
-                    id="fitur" 
-                    className="container mx-auto px-4 py-20 bg-zinc-50 dark:bg-zinc-900/50"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                >
+                {/* Features Section - OPTIMIZED */}
+                <section id="fitur" className="container mx-auto px-4 py-20 bg-zinc-50 dark:bg-zinc-900/50">
                     <div className="text-center space-y-4 mb-16">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <Badge variant="secondary" className="w-fit mx-auto gap-1">
-                                <Sparkles className="w-3 h-3" />
-                                Fitur Unggulan
-                            </Badge>
-                        </motion.div>
-                        <motion.h2 
-                            className="text-4xl md:text-6xl font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            viewport={{ once: true }}
-                        >
+                        <Badge variant="secondary" className="w-fit mx-auto gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            Fitur Unggulan
+                        </Badge>
+                        <h2 className="text-4xl md:text-6xl font-bold">
                             Semua yang Anda Butuhkan untuk{' '}
-                            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                 Mengelola Parkir
                             </span>
-                        </motion.h2>
-                        <motion.p 
-                            className="text-xl text-muted-foreground max-w-2xl mx-auto"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            viewport={{ once: true }}
-                        >
+                        </h2>
+                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                             Dilengkapi dengan fitur-fitur canggih untuk memudahkan pengelolaan area parkir Anda
-                        </motion.p>
+                        </p>
                     </div>
 
                     <Tabs defaultValue="management" className="max-w-6xl mx-auto mb-12">
@@ -549,28 +475,15 @@ export default function Welcome() {
                                         bgColor: 'bg-orange-500/10'
                                     }
                                 ].map((feature, index) => (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        viewport={{ once: true }}
-                                        whileHover={{ y: -5 }}
-                                    >
-                                        <Card className="hover:shadow-lg transition-all border-2 hover:border-primary/50 h-full">
-                                            <CardHeader>
-                                                <motion.div 
-                                                    className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}
-                                                    whileHover={{ rotate: 360, scale: 1.1 }}
-                                                    transition={{ duration: 0.5 }}
-                                                >
-                                                    <feature.icon className={`w-7 h-7 ${feature.color}`} />
-                                                </motion.div>
-                                                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                                                <CardDescription className="text-base">{feature.description}</CardDescription>
-                                            </CardHeader>
-                                        </Card>
-                                    </motion.div>
+                                    <Card key={index} className="hover:shadow-lg transition-all border-2 hover:border-primary/50 h-full">
+                                        <CardHeader>
+                                            <div className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}>
+                                                <feature.icon className={`w-7 h-7 ${feature.color}`} />
+                                            </div>
+                                            <CardTitle className="text-xl">{feature.title}</CardTitle>
+                                            <CardDescription className="text-base">{feature.description}</CardDescription>
+                                        </CardHeader>
+                                    </Card>
                                 ))}
                             </div>
                         </TabsContent>
@@ -606,28 +519,15 @@ export default function Welcome() {
                                         bgColor: 'bg-red-500/10'
                                     }
                                 ].map((feature, index) => (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        viewport={{ once: true }}
-                                        whileHover={{ y: -5 }}
-                                    >
-                                        <Card className="hover:shadow-lg transition-all border-2 hover:border-primary/50 h-full">
-                                            <CardHeader>
-                                                <motion.div 
-                                                    className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}
-                                                    whileHover={{ rotate: 360, scale: 1.1 }}
-                                                    transition={{ duration: 0.5 }}
-                                                >
-                                                    <feature.icon className={`w-7 h-7 ${feature.color}`} />
-                                                </motion.div>
-                                                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                                                <CardDescription className="text-base">{feature.description}</CardDescription>
-                                            </CardHeader>
-                                        </Card>
-                                    </motion.div>
+                                    <Card key={index} className="hover:shadow-lg transition-all border-2 hover:border-primary/50 h-full">
+                                        <CardHeader>
+                                            <div className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}>
+                                                <feature.icon className={`w-7 h-7 ${feature.color}`} />
+                                            </div>
+                                            <CardTitle className="text-xl">{feature.title}</CardTitle>
+                                            <CardDescription className="text-base">{feature.description}</CardDescription>
+                                        </CardHeader>
+                                    </Card>
                                 ))}
                             </div>
                         </TabsContent>
@@ -663,91 +563,46 @@ export default function Welcome() {
                                         bgColor: 'bg-green-500/10'
                                     }
                                 ].map((feature, index) => (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        viewport={{ once: true }}
-                                        whileHover={{ y: -5 }}
-                                    >
-                                        <Card className="hover:shadow-lg transition-all border-2 hover:border-primary/50 h-full">
-                                            <CardHeader>
-                                                <motion.div 
-                                                    className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}
-                                                    whileHover={{ rotate: 360, scale: 1.1 }}
-                                                    transition={{ duration: 0.5 }}
-                                                >
-                                                    <feature.icon className={`w-7 h-7 ${feature.color}`} />
-                                                </motion.div>
-                                                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                                                <CardDescription className="text-base">{feature.description}</CardDescription>
-                                            </CardHeader>
-                                        </Card>
-                                    </motion.div>
+                                    <Card key={index} className="hover:shadow-lg transition-all border-2 hover:border-primary/50 h-full">
+                                        <CardHeader>
+                                            <div className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}>
+                                                <feature.icon className={`w-7 h-7 ${feature.color}`} />
+                                            </div>
+                                            <CardTitle className="text-xl">{feature.title}</CardTitle>
+                                            <CardDescription className="text-base">{feature.description}</CardDescription>
+                                        </CardHeader>
+                                    </Card>
                                 ))}
                             </div>
                         </TabsContent>
                     </Tabs>
 
-                    <motion.div 
-                        className="text-center mt-12"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
+                    <div className="text-center mt-12">
                         <Link href="/register">
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button size="lg" className="gap-2">
-                                    Coba Semua Fitur Gratis
-                                    <ArrowRight className="w-4 h-4" />
-                                </Button>
-                            </motion.div>
+                            <Button size="lg" className="gap-2">
+                                Coba Semua Fitur Gratis
+                                <ArrowRight className="w-4 h-4" />
+                            </Button>
                         </Link>
-                    </motion.div>
-                </motion.section>
+                    </div>
+                </section>
 
                 {/* How It Works Section */}
-                <motion.section 
-                    id="cara-kerja" 
-                    className="container mx-auto px-4 py-20"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
+                <section id="cara-kerja" className="container mx-auto px-4 py-20">
                     <div className="text-center space-y-4 mb-16">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <Badge variant="secondary" className="w-fit mx-auto gap-1">
-                                <Zap className="w-3 h-3" />
-                                Cara Kerja
-                            </Badge>
-                        </motion.div>
-                        <motion.h2 
-                            className="text-4xl md:text-6xl font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            viewport={{ once: true }}
-                        >
+                        <Badge variant="secondary" className="w-fit mx-auto gap-1">
+                            <Zap className="w-3 h-3" />
+                            Cara Kerja
+                        </Badge>
+                        <h2 className="text-4xl md:text-6xl font-bold">
                             Mudah Digunakan dalam{' '}
-                            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                 3 Langkah
                             </span>
-                        </motion.h2>
-                        <motion.p 
-                            className="text-xl text-muted-foreground max-w-2xl mx-auto"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            viewport={{ once: true }}
-                        >
+                        </h2>
+                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                             Setup dalam hitungan menit, operasional dalam hitungan detik
-                        </motion.p>
+                        </p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -774,467 +629,241 @@ export default function Welcome() {
                                 time: '45 detik'
                             }
                         ].map((item, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: index * 0.2, type: "spring", stiffness: 100 }}
-                                viewport={{ once: true }}
-                                whileHover={{ y: -10, scale: 1.05 }}
-                            >
-                                <Card className="relative hover:shadow-xl transition-all border-2 hover:border-primary/50 h-full">
-                                    <CardHeader>
-                                        <div className="text-7xl font-bold text-primary/5 absolute top-4 right-4">{item.step}</div>
-                                        <motion.div 
-                                            className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-2xl mb-4"
-                                            whileHover={{ rotate: 360 }}
-                                            transition={{ duration: 0.6 }}
-                                        >
-                                            {index + 1}
-                                        </motion.div>
-                                        <Badge variant="secondary" className="w-fit mb-2">
-                                            <Clock className="w-3 h-3 mr-1" />
-                                            {item.time}
-                                        </Badge>
-                                        <CardTitle className="text-2xl">{item.title}</CardTitle>
-                                        <CardDescription className="text-base leading-relaxed">{item.description}</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <motion.div 
-                                            className={`w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center`}
-                                            whileHover={{ scale: 1.2, rotate: 10 }}
-                                        >
-                                            <item.icon className="w-6 h-6 text-primary" />
-                                        </motion.div>
-                                    </CardContent>
-                                    {index < 2 && (
-                                        <motion.div
-                                            className="hidden lg:block absolute top-1/2 -right-12 w-8 h-8 text-primary/30"
-                                            animate={{ x: [0, 10, 0] }}
-                                            transition={{ duration: 2, repeat: Infinity }}
-                                        >
-                                            <ArrowRight className="w-full h-full" />
-                                        </motion.div>
-                                    )}
-                                </Card>
-                            </motion.div>
+                            <Card key={index} className="relative hover:shadow-xl transition-all border-2 hover:border-primary/50 h-full">
+                                <CardHeader>
+                                    <div className="text-7xl font-bold text-primary/5 absolute top-4 right-4">{item.step}</div>
+                                    <div className="relative w-16 h-16 rounded-2xl bg-linear-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-2xl mb-4">
+                                        {index + 1}
+                                    </div>
+                                    <Badge variant="secondary" className="w-fit mb-2">
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        {item.time}
+                                    </Badge>
+                                    <CardTitle className="text-2xl">{item.title}</CardTitle>
+                                    <CardDescription className="text-base leading-relaxed">{item.description}</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className={`w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center`}>
+                                        <item.icon className="w-6 h-6 text-primary" />
+                                    </div>
+                                </CardContent>
+                                {index < 2 && (
+                                    <div className="hidden lg:block absolute top-1/2 -right-12 w-8 h-8 text-primary/30">
+                                        <ArrowRight className="w-full h-full" />
+                                    </div>
+                                )}
+                            </Card>
                         ))}
                     </div>
-                </motion.section>
+                </section>
 
                 {/* Pricing Section */}
-                <motion.section 
-                    id="harga" 
-                    className="container mx-auto px-4 py-20 bg-zinc-50 dark:bg-zinc-900/50"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
+                <section id="harga" className="container mx-auto px-4 py-20 bg-zinc-50 dark:bg-zinc-900/50">
                     <div className="text-center space-y-4 mb-16">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <Badge variant="secondary" className="w-fit mx-auto gap-1">
-                                <DollarSign className="w-3 h-3" />
-                                Harga Transparan
-                            </Badge>
-                        </motion.div>
-                        <motion.h2 
-                            className="text-4xl md:text-6xl font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            viewport={{ once: true }}
-                        >
+                        <Badge variant="secondary" className="w-fit mx-auto gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            Harga Transparan
+                        </Badge>
+                        <h2 className="text-4xl md:text-6xl font-bold">
                             Pilih Paket yang{' '}
-                            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                 Pas untuk Anda
                             </span>
-                        </motion.h2>
-                        <motion.p 
-                            className="text-xl text-muted-foreground max-w-2xl mx-auto"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            viewport={{ once: true }}
-                        >
+                        </h2>
+                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                             Mulai gratis, upgrade kapan saja. Tanpa komitmen jangka panjang.
-                        </motion.p>
+                        </p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                         {pricingPlans.map((plan, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 50 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1, type: "spring" }}
-                                viewport={{ once: true }}
-                                whileHover={{ y: -10, scale: plan.highlighted ? 1.05 : 1.03 }}
-                            >
-                                <Card className={`relative h-full ${plan.highlighted ? 'border-primary shadow-2xl scale-105 dark:bg-zinc-900' : 'border-2'}`}>
-                                    {plan.highlighted && (
-                                        <motion.div 
-                                            className="absolute -top-4 left-1/2 -translate-x-1/2"
-                                            animate={{ y: [0, -5, 0] }}
-                                            transition={{ duration: 2, repeat: Infinity }}
+                            <Card key={index} className={`relative h-full ${plan.highlighted ? 'border-primary shadow-2xl scale-105 dark:bg-zinc-900' : 'border-2'}`}>
+                                {plan.highlighted && (
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                                        <Badge className="gap-1 px-4 py-1">
+                                            <Award className="w-3 h-3" />
+                                            Paling Populer
+                                        </Badge>
+                                    </div>
+                                )}
+                                <CardHeader>
+                                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                                    <CardDescription>{plan.description}</CardDescription>
+                                    <div className="pt-4">
+                                        <span className="text-4xl font-bold">{plan.price}</span>
+                                        <span className="text-muted-foreground">
+                                            {plan.period && ` ${plan.period}`}
+                                        </span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <Separator />
+                                    <ul className="space-y-3">
+                                        {plan.features.map((feature, idx) => (
+                                            <li key={idx} className="flex items-start gap-3">
+                                                <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                                <span className="text-sm">{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </CardContent>
+                                <CardFooter>
+                                    <Link href="/register" className="w-full">
+                                        <Button 
+                                            className="w-full gap-2" 
+                                            variant={plan.highlighted ? "default" : "outline"}
+                                            size="lg"
                                         >
-                                            <Badge className="gap-1 px-4 py-1">
-                                                <Award className="w-3 h-3" />
-                                                Paling Populer
-                                            </Badge>
-                                        </motion.div>
-                                    )}
-                                    <CardHeader>
-                                        <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                                        <CardDescription>{plan.description}</CardDescription>
-                                        <div className="pt-4">
-                                            <span className="text-4xl font-bold">{plan.price}</span>
-                                            <span className="text-muted-foreground">
-                                                {plan.period && ` ${plan.period}`}
-                                            </span>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <Separator />
-                                        <ul className="space-y-3">
-                                            {plan.features.map((feature, idx) => (
-                                                <motion.li 
-                                                    key={idx} 
-                                                    className="flex items-start gap-3"
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    whileInView={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: idx * 0.05 }}
-                                                    viewport={{ once: true }}
-                                                >
-                                                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                                    <span className="text-sm">{feature}</span>
-                                                </motion.li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Link href="/register" className="w-full">
-                                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                                <Button 
-                                                    className="w-full gap-2" 
-                                                    variant={plan.highlighted ? "default" : "outline"}
-                                                    size="lg"
-                                                >
-                                                    {plan.name === "Enterprise" ? "Hubungi Sales" : "Mulai Sekarang"}
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </Button>
-                                            </motion.div>
-                                        </Link>
-                                    </CardFooter>
-                                </Card>
-                            </motion.div>
+                                            {plan.name === "Enterprise" ? "Hubungi Sales" : "Mulai Sekarang"}
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Button>
+                                    </Link>
+                                </CardFooter>
+                            </Card>
                         ))}
                     </div>
 
-                    <motion.div 
-                        className="text-center mt-12"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                    >
+                    <div className="text-center mt-12">
                         <p className="text-muted-foreground">
                             Semua paket termasuk: Barcode Scanner, Export PDF/Excel, Multi-area Support, dan Log Aktivitas
                         </p>
-                    </motion.div>
-                </motion.section>
+                    </div>
+                </section>
 
                 {/* Testimonials Section */}
-                <motion.section 
-                    id="testimoni" 
-                    className="container mx-auto px-4 py-20"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
+                <section id="testimoni" className="container mx-auto px-4 py-20">
                     <div className="text-center space-y-4 mb-16">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <Badge variant="secondary" className="w-fit mx-auto gap-1">
-                                <Star className="w-3 h-3" />
-                                Testimoni Pengguna
-                            </Badge>
-                        </motion.div>
-                        <motion.h2 
-                            className="text-4xl md:text-6xl font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            viewport={{ once: true }}
-                        >
+                        <Badge variant="secondary" className="w-fit mx-auto gap-1">
+                            <Star className="w-3 h-3" />
+                            Testimoni Pengguna
+                        </Badge>
+                        <h2 className="text-4xl md:text-6xl font-bold">
                             Feedback dari{' '}
-                            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                 Pengguna Sistem
                             </span>
-                        </motion.h2>
-                        <motion.p 
-                            className="text-xl text-muted-foreground max-w-2xl mx-auto"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            viewport={{ once: true }}
-                        >
+                        </h2>
+                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                             Lihat bagaimana PaarkirBang membantu mengelola area parkir
-                        </motion.p>
+                        </p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                         {testimonials.map((testimonial, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: index * 0.1, type: "spring" }}
-                                viewport={{ once: true }}
-                                whileHover={{ y: -10, scale: 1.05 }}
-                            >
-                                <Card className="hover:shadow-xl transition-all border-2 h-full">
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <Avatar className="w-12 h-12">
-                                                    <AvatarFallback className="bg-primary text-primary-foreground">
-                                                        {testimonial.avatar}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <CardTitle className="text-base">{testimonial.name}</CardTitle>
-                                                    <CardDescription className="text-xs">{testimonial.role}</CardDescription>
-                                                </div>
+                            <Card key={index} className="hover:shadow-xl transition-all border-2 h-full">
+                                <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <Avatar className="w-12 h-12">
+                                                <AvatarFallback className="bg-primary text-primary-foreground">
+                                                    {testimonial.avatar}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <CardTitle className="text-base">{testimonial.name}</CardTitle>
+                                                <CardDescription className="text-xs">{testimonial.role}</CardDescription>
                                             </div>
-                                            <Quote className="w-8 h-8 text-primary/20" />
                                         </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="flex gap-1">
-                                            {[...Array(testimonial.rating)].map((_, i) => (
-                                                <motion.div
-                                                    key={i}
-                                                    initial={{ scale: 0, rotate: -180 }}
-                                                    whileInView={{ scale: 1, rotate: 0 }}
-                                                    transition={{ delay: i * 0.1 }}
-                                                    viewport={{ once: true }}
-                                                >
-                                                    <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                        <p className="text-sm leading-relaxed italic">"{testimonial.content}"</p>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
+                                        <Quote className="w-8 h-8 text-primary/20" />
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex gap-1">
+                                        {[...Array(testimonial.rating)].map((_, i) => (
+                                            <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                                        ))}
+                                    </div>
+                                    <p className="text-sm leading-relaxed italic">"{testimonial.content}"</p>
+                                </CardContent>
+                            </Card>
                         ))}
                     </div>
-                </motion.section>
-
-                
+                </section>
 
                 {/* FAQ Section */}
-                <motion.section 
-                    id="faq" 
-                    className="container mx-auto px-4 py-20"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
+                <section id="faq" className="container mx-auto px-4 py-20">
                     <div className="text-center space-y-4 mb-16">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <Badge variant="secondary" className="w-fit mx-auto">
-                                FAQ
-                            </Badge>
-                        </motion.div>
-                        <motion.h2 
-                            className="text-4xl md:text-6xl font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            viewport={{ once: true }}
-                        >
+                        <Badge variant="secondary" className="w-fit mx-auto">
+                            FAQ
+                        </Badge>
+                        <h2 className="text-4xl md:text-6xl font-bold">
                             Pertanyaan yang{' '}
-                            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                                 Sering Ditanyakan
                             </span>
-                        </motion.h2>
+                        </h2>
                     </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        viewport={{ once: true }}
-                    >
-                        <Accordion type="single" collapsible className="max-w-3xl mx-auto">
-                            {faqs.map((faq, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, x: -30 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <AccordionItem value={`item-${index}`}>
-                                        <AccordionTrigger className="text-left text-lg font-semibold hover:text-primary">
-                                            {faq.question}
-                                        </AccordionTrigger>
-                                        <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-                                            {faq.answer}
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </motion.div>
-                            ))}
-                        </Accordion>
-                    </motion.div>
+                    <Accordion type="single" collapsible className="max-w-3xl mx-auto">
+                        {faqs.map((faq, index) => (
+                            <AccordionItem key={index} value={`item-${index}`}>
+                                <AccordionTrigger className="text-left text-lg font-semibold hover:text-primary">
+                                    {faq.question}
+                                </AccordionTrigger>
+                                <AccordionContent className="text-base text-muted-foreground leading-relaxed">
+                                    {faq.answer}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
 
-                    <motion.div 
-                        className="text-center mt-12"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
+                    <div className="text-center mt-12">
                         <p className="text-muted-foreground mb-4">Masih punya pertanyaan?</p>
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button variant="outline" size="lg">
-                                Hubungi Support
-                            </Button>
-                        </motion.div>
-                    </motion.div>
-                </motion.section>
+                        <Button variant="outline" size="lg">
+                            Hubungi Support
+                        </Button>
+                    </div>
+                </section>
 
-                {/* CTA Section with Parallax */}
-                <motion.section 
-                    className="container mx-auto px-4 py-20"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
-                    <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                    >
-                        <Card className="relative overflow-hidden border-2">
-                            <motion.div 
-                                className="absolute inset-0 bg-gradient-to-br from-primary/10 via-purple-500/10 to-primary/10"
-                                animate={{ 
-                                    backgroundPosition: ['0% 0%', '100% 100%'],
-                                }}
-                                transition={{ 
-                                    duration: 20,
-                                    repeat: Infinity,
-                                    repeatType: "reverse"
-                                }}
-                            />
-                            <CardContent className="relative p-12 md:p-16 text-center space-y-8">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <Badge className="w-fit mx-auto gap-1" variant="secondary">
-                                        <Zap className="w-3 h-3" />
-                                        Setup Cepat dalam Menit
-                                    </Badge>
-                                </motion.div>
-                                <motion.h2 
-                                    className="text-4xl md:text-6xl font-bold"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    viewport={{ once: true }}
-                                >
-                                    Siap untuk Memulai?
-                                </motion.h2>
-                                <motion.p 
-                                    className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                    viewport={{ once: true }}
-                                >
-                                    Bergabunglah dengan PaarkirBang hari ini dan rasakan kemudahan mengelola parkir 
-                                    dengan Laravel 11 + React. Multi-area support, role-based access, dan export PDF/Excel siap pakai!
-                                </motion.p>
-                                <motion.div 
-                                    className="flex flex-wrap gap-4 justify-center pt-4"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <Link href="/register">
-                                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                            <Button size="lg" className="gap-2 px-8">
-                                                Daftar Gratis Sekarang
-                                                <ArrowRight className="w-5 h-5" />
-                                            </Button>
-                                        </motion.div>
-                                    </Link>
-                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button size="lg" variant="outline" className="px-8">
-                                            Jadwalkan Demo
-                                        </Button>
-                                    </motion.div>
-                                </motion.div>
-                                <motion.div 
-                                    className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm text-muted-foreground"
-                                    initial={{ opacity: 0 }}
-                                    whileInView={{ opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                    viewport={{ once: true }}
-                                >
-                                    {[
-                                        "Laravel 11 + React",
-                                        "Multi-area parkir",
-                                        "Export PDF & Excel"
-                                    ].map((item, index) => (
-                                        <motion.div 
-                                            key={index}
-                                            className="flex items-center gap-2"
-                                            whileHover={{ scale: 1.1 }}
-                                        >
-                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            <span>{item}</span>
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                </motion.section>
+                {/* CTA Section - OPTIMIZED */}
+                <section className="container mx-auto px-4 py-20">
+                    <Card className="relative overflow-hidden border-2">
+                        {/* OPTIMASI #4: Static gradient instead of animated */}
+                        <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-purple-500/10 to-primary/10" />
+                        <CardContent className="relative p-12 md:p-16 text-center space-y-8">
+                            <Badge className="w-fit mx-auto gap-1" variant="secondary">
+                                <Zap className="w-3 h-3" />
+                                Setup Cepat dalam Menit
+                            </Badge>
+                            <h2 className="text-4xl md:text-6xl font-bold">
+                                Siap untuk Memulai?
+                            </h2>
+                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                                Bergabunglah dengan PaarkirBang hari ini dan rasakan kemudahan mengelola parkir 
+                                dengan Laravel 11 + React. Multi-area support, role-based access, dan export PDF/Excel siap pakai!
+                            </p>
+                            <div className="flex flex-wrap gap-4 justify-center pt-4">
+                                <Link href="/register">
+                                    <Button size="lg" className="gap-2 px-8">
+                                        Daftar Gratis Sekarang
+                                        <ArrowRight className="w-5 h-5" />
+                                    </Button>
+                                </Link>
+                                <Button size="lg" variant="outline" className="px-8">
+                                    Jadwalkan Demo
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm text-muted-foreground">
+                                {[
+                                    "Laravel 11 + React",
+                                    "Multi-area parkir",
+                                    "Export PDF & Excel"
+                                ].map((item, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                        <span>{item}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </section>
 
-                {/* Footer with Animations */}
-                <motion.footer 
-                    className="border-t bg-zinc-50 dark:bg-zinc-900/50"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                >
+                {/* Footer */}
+                <footer className="border-t bg-zinc-50 dark:bg-zinc-900/50">
                     <div className="container mx-auto px-4 py-12">
                         <div className="grid md:grid-cols-5 gap-8 mb-12">
-                            <motion.div 
-                                className="md:col-span-2 space-y-4"
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                            >
+                            <div className="md:col-span-2 space-y-4">
                                 <Logo />
                                 <p className="text-sm text-muted-foreground leading-relaxed">
                                     Sistem manajemen parkir berbasis web dengan Laravel 11 + React + TypeScript. 
@@ -1242,18 +871,12 @@ export default function Welcome() {
                                 </p>
                                 <div className="flex gap-3">
                                     {[1, 2, 3].map((i) => (
-                                        <motion.div 
-                                            key={i}
-                                            whileHover={{ scale: 1.2, rotate: 360 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <Button size="icon" variant="outline">
-                                                <span className="w-4 h-4">•</span>
-                                            </Button>
-                                        </motion.div>
+                                        <Button key={i} size="icon" variant="outline">
+                                            <span className="w-4 h-4">•</span>
+                                        </Button>
                                     ))}
                                 </div>
-                            </motion.div>
+                            </div>
                             {[
                                 {
                                     title: "Produk",
@@ -1267,53 +890,34 @@ export default function Welcome() {
                                     title: "Dukungan",
                                     links: ["Pusat Bantuan", "Dokumentasi", "FAQ", "Kontak"]
                                 }
-                            ].map((section, index) => (
-                                <motion.div 
-                                    key={section.title}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    viewport={{ once: true }}
-                                >
+                            ].map((section) => (
+                                <div key={section.title}>
                                     <h3 className="font-bold mb-4 text-sm">{section.title}</h3>
                                     <ul className="space-y-3 text-sm text-muted-foreground">
                                         {section.links.map((link) => (
-                                            <motion.li 
-                                                key={link}
-                                                whileHover={{ x: 5, color: 'var(--primary)' }}
-                                            >
+                                            <li key={link}>
                                                 <a href="#" className="hover:text-primary transition-colors">{link}</a>
-                                            </motion.li>
+                                            </li>
                                         ))}
                                     </ul>
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
                         <Separator className="mb-8" />
-                        <motion.div 
-                            className="flex flex-col md:flex-row justify-between items-center gap-4"
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                        >
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             <p className="text-sm text-muted-foreground">
                                 © 2026 HanNajib. All rights reserved.
                             </p>
                             <div className="flex gap-6 text-sm text-muted-foreground">
                                 {["Privacy Policy", "Terms of Service", "Cookies"].map((link) => (
-                                    <motion.a 
-                                        key={link}
-                                        href="#" 
-                                        className="hover:text-primary transition-colors"
-                                        whileHover={{ y: -2 }}
-                                    >
+                                    <a key={link} href="#" className="hover:text-primary transition-colors">
                                         {link}
-                                    </motion.a>
+                                    </a>
                                 ))}
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
-                </motion.footer>
+                </footer>
             </div>
         </>
     );

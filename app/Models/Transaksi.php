@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
+use App\Traits\Loggable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class Transaksi extends Model
 {
-    use HasSearchAndFilter;
+    use HasSearchAndFilter, Loggable;
 
     protected $table = 'transaksi';
     protected $guarded = []; 

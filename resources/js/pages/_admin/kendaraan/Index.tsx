@@ -1,5 +1,5 @@
 import { SidebarLayout } from '@/layout/SidebarLayout'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { IconCar, IconSearch, IconUser } from '@tabler/icons-react'
@@ -16,6 +16,7 @@ import { router } from '@inertiajs/react'
 import kendaraanRoute from '@/routes/kendaraan'
 import CreateModal from './CreateModal'
 import EditModal from './EditModal'
+import useDebounce from '@/hooks/useDebounce'
 
 interface Props {
   kendaraan: PaginatedData<Kendaraan>
@@ -34,6 +35,17 @@ interface Props {
 export default function Index({ kendaraan, stats, filter }: Props) {
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [jenisKendaraanFilter, setJenisKendaraanFilter] = useState<string>(filter.jenis_kendaraan || 'all')
+  
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const isFirstRender = useRef(true)
+  
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    applyFilter({ s: debouncedSearchTerm })
+  }, [debouncedSearchTerm])
   
   const applyFilter = (extra = {}) => {
     router.get(
@@ -62,10 +74,7 @@ export default function Index({ kendaraan, stats, filter }: Props) {
                 placeholder="Cari kendaraan berdasarkan plat nomor atau jenis kendaraan..."
                 className="pl-10"
                 value={searchTerm}
-                onChange={(e) =>{
-                    setSearchTerm(e.target.value)
-                    applyFilter({ s: e.target.value})
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 

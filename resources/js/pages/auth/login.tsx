@@ -5,6 +5,7 @@ import {
   IconEye,
   IconEyeOff,
   IconMail,
+  IconLock,
 } from "@tabler/icons-react";
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layout/AuthLayout';
@@ -12,6 +13,8 @@ import { Form, Link } from '@inertiajs/react';
 import { store } from '@/routes/login';
 import InputError from '@/components/ui/input-error';
 import { register } from '@/routes';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 
 interface LoginProps {
   status?: string;
@@ -36,84 +39,113 @@ export default function Login({
       >
         {({ processing, errors }) => (
           <>
-            <div className="space-y-4">
-              {/* Name Fields Row */}
-              <div className="grid grid-cols-2 gap-4">
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs uppercase tracking-wide text-muted-foreground">
+            <div className="space-y-5">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+              >
+                <Label htmlFor="email" className="text-sm font-medium">
                   Email
                 </Label>
-                <div className="relative">
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                    <IconMail className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  </div>
                   <Input
                     id="email"
-                    placeholder="michal.masiak@anywhere.co"
+                    placeholder="nama@email.com"
                     type="email"
                     name='email'
-                    className="h-12 rounded-xl border-border/50 bg-muted/30 pr-10 transition-all focus:border-primary focus:bg-background"
+                    className="h-14 rounded-xl border-2 border-border/50 bg-background/50 pl-12 pr-4 text-base backdrop-blur-sm transition-all duration-200 focus:border-primary focus:bg-background focus:shadow-lg focus:shadow-primary/10"
                   />
-                  <IconMail className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
                 <InputError message={errors.email} />
-              </div>
+              </motion.div>
 
               {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs uppercase tracking-wide text-muted-foreground">
+              <motion.div 
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+              >
+                <Label htmlFor="password" className="text-sm font-medium">
                   Password
                 </Label>
-                <div className="relative">
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                    <IconLock className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  </div>
                   <Input
                     id="password"
                     placeholder="••••••••"
                     name='password'
                     type={showPassword ? "text" : "password"}
-                    className="h-12 rounded-xl border-primary/50 bg-muted/30 pr-10 ring-1 ring-primary/20 transition-all focus:border-primary focus:bg-background focus:ring-primary/30"
+                    className="h-14 rounded-xl border-2 border-border/50 bg-background/50 pl-12 pr-12 text-base backdrop-blur-sm transition-all duration-200 focus:border-primary focus:bg-background focus:shadow-lg focus:shadow-primary/10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    className="absolute right-4 top-1/2 z-10 -translate-y-1/2 text-muted-foreground transition-all hover:text-foreground hover:scale-110"
                   >
                     {showPassword ? (
-                      <IconEyeOff className="h-4 w-4" />
+                      <IconEyeOff className="h-5 w-5" />
                     ) : (
-                      <IconEye className="h-4 w-4" />
+                      <IconEye className="h-5 w-5" />
                     )}
                   </button>
                 </div>
                 <InputError message={errors.password} />
-              </div>
+              </motion.div>
             </div>
 
-            <div className="mt-8 flex gap-3">
+            {/* Submit Button */}
+            <motion.div 
+              className="mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+            >
               <Button
                 type='submit'
-                disabled={isLoading}
-                className="group/btn relative h-12 flex-1 overflow-hidden rounded-full bg-gradient-to-r from-primary to-primary font-semibold shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:shadow-primary/40 cursor-pointer disabled:opacity-50"
+                disabled={processing}
+                className="group relative h-14 w-full overflow-hidden rounded-xl bg-linear-to-r from-primary to-purple-600 text-base font-semibold shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  {isLoading ? (
+                  {processing ? (
                     <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Loading...
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Memproses...
                     </>
                   ) : (
-                    "Sign In"
+                    <>
+                      Masuk
+                      <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    </>
                   )}
                 </span>
+                <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-opacity group-hover:opacity-100" />
               </Button>
+            </motion.div>
 
-            </div>
             {canRegister && (
-              <div className="text-center text-sm text-muted-foreground mt-2">
-                Don't have an account?{' '}
-                <Link href={register()} tabIndex={5}>
-                  Sign up
+              <motion.div 
+                className="mt-6 text-center text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+              >
+                <span className="text-muted-foreground">Belum punya akun?</span>{' '}
+                <Link 
+                  href={register()} 
+                  className="font-semibold text-primary hover:text-purple-600 transition-colors hover:underline"
+                  tabIndex={5}
+                >
+                  Daftar sekarang
                 </Link>
-              </div>
+              </motion.div>
             )}
           </>
         )}

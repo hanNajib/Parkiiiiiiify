@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
+use App\Traits\Loggable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AreaParkir extends Model
 {
-    use HasSearchAndFilter, SoftDeletes;
+    use HasSearchAndFilter, SoftDeletes, Loggable;
 
     protected $table = 'area_parkir';
     protected $guarded = [];

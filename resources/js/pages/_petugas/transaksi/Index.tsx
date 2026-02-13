@@ -1,5 +1,5 @@
 import { SidebarLayout } from '@/layout/SidebarLayout'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { IconSearch } from '@tabler/icons-react'
@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import BarcodeScanner from '@/components/BarcodeScanner'
 import { toast } from 'sonner'
 import { usePage } from '@inertiajs/react'
+import useDebounce from '@/hooks/useDebounce'
 
 interface Props {
   transaksi: PaginatedData<Transaksi>
@@ -41,6 +42,17 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [statusFilter, setStatusFilter] = useState<string>(filter.status || 'all')
   const { props } = usePage<PageProps>()
+  
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const isFirstRender = useRef(true)
+  
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    applyFilter({ s: debouncedSearchTerm })
+  }, [debouncedSearchTerm])
 
   // Auto-open receipt after transaction created or checkout
   useEffect(() => {
@@ -152,10 +164,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
                 placeholder="Cari berdasarkan plat nomor atau pemilik kendaraan..."
                 className="pl-10"
                 value={searchTerm}
-                onChange={(e) =>{
-                    setSearchTerm(e.target.value)
-                    applyFilter({ s: e.target.value})
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 

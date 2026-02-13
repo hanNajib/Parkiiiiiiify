@@ -1,5 +1,5 @@
 import { SidebarLayout } from '@/layout/SidebarLayout'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { IconSearch, IconActivity, IconUser, IconShieldCheck } from '@tabler/icons-react'
@@ -10,6 +10,7 @@ import StatCard from '@/components/StatCard'
 import { router } from '@inertiajs/react'
 import logAktivitasRoute from '@/routes/log-aktivitas'
 import { Badge } from '@/components/ui/badge'
+import useDebounce from '@/hooks/useDebounce'
 
 interface Props {
   logAktivitas: PaginatedData<LogAktivitas>
@@ -30,6 +31,18 @@ export default function Index({ logAktivitas, stats, filter }: Props) {
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [roleFilter, setRoleFilter] = useState<string>(filter.role || 'all')
   const [actionFilter, setActionFilter] = useState<string>(filter.action || 'all')
+  
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const isFirstRender = useRef(true)
+  
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    
+    applyFilter({ s: debouncedSearchTerm })
+  }, [debouncedSearchTerm])
   
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -110,10 +123,7 @@ export default function Index({ logAktivitas, stats, filter }: Props) {
                 placeholder="Cari berdasarkan deskripsi atau IP address..."
                 className="pl-10"
                 value={searchTerm}
-                onChange={(e) =>{
-                    setSearchTerm(e.target.value)
-                    applyFilter({ s: e.target.value})
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 

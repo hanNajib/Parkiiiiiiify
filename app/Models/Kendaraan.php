@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
+use App\Traits\Loggable;
 use Illuminate\Database\Eloquent\Model;
 
 class Kendaraan extends Model
 {
-    use HasSearchAndFilter;
+    use HasSearchAndFilter, Loggable;
     protected $table = 'kendaraan';
     protected $guarded = [];
     protected $searchable = [
