@@ -13,7 +13,7 @@ class AreaParkir extends Model
 
     protected $table = 'area_parkir';
     protected $guarded = [];
-    protected $appends = ['tarif_lengkap'];
+    protected $appends = ['tarif_lengkap', 'terisi'];
 
     public function tarif() {
         return $this->hasMany(Tarif::class, 'area_parkir_id');
@@ -37,5 +37,9 @@ class AreaParkir extends Model
         }
 
         return true;
+    }
+
+    public function getTerisiAttribute() {
+        return $this->transaksi()->where('status', 'ongoing')->count();
     }
 }

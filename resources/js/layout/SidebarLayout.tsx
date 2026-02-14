@@ -59,7 +59,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
           </div>
         </SidebarBody>
 
-        {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
           <main className="flex p-7 h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background shadow-sm md:p-10">
             {children}

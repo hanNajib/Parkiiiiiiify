@@ -9,7 +9,7 @@ import { Transaksi, PaginatedData, AreaParkir, Kendaraan, Tarif, PageProps } fro
 import DashboardHeader from '@/components/dashboard-header'
 import StatCard from '@/components/StatCard'
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from '@/components/ui/dropdown-menu'
-import { EllipsisVertical, Trash, Clock, DollarSign, CheckCircle, Receipt, MapPin, ArrowLeft } from 'lucide-react'
+import { EllipsisVertical, Trash, Clock, DollarSign, CheckCircle, Receipt, MapPin, ArrowLeft, Calendar } from 'lucide-react'
 import { ConfirmDelete } from '@/components/confirmModal'
 import { router } from '@inertiajs/react'
 import transaksiRoute from '@/routes/transaksi'
@@ -35,16 +35,29 @@ interface Props {
   filter: {
     s?: string,
     status?: string,
+    date_from?: string,
+    date_to?: string,
   }
 }
 
 export default function Index({ transaksi, stats, areaParkir, kendaraanList, tarifList, filter }: Props) {
+  const today = new Date().toISOString().split('T')[0]
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [statusFilter, setStatusFilter] = useState<string>(filter.status || 'all')
+  const [dateFrom, setDateFrom] = useState(filter.date_from || today)
+  const [dateTo, setDateTo] = useState(filter.date_to || today)
+  const [showDateFilter, setShowDateFilter] = useState(false)
   const { props } = usePage<PageProps>()
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const isFirstRender = useRef(true)
+  
+  useEffect(() => {
+    if (showDateFilter && !filter.date_from && !filter.date_to) {
+      if (!dateFrom) setDateFrom(today)
+      if (!dateTo) setDateTo(today)
+    }
+  }, [showDateFilter])
   
   useEffect(() => {
     if (isFirstRender.current) {
@@ -54,7 +67,6 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
     applyFilter({ s: debouncedSearchTerm })
   }, [debouncedSearchTerm])
 
-  // Auto-open receipt after transaction created or checkout
   useEffect(() => {
     const flash = props.flash as any
     
@@ -75,6 +87,8 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
         {
             s: searchTerm,
             status: statusFilter !== 'all' ? statusFilter : undefined,
+            date_from: dateFrom || undefined,
+            date_to: dateTo || undefined,
             ...extra
         },
     )
@@ -83,7 +97,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
   const handleCheckout = (id: number) => {
     router.put(transaksiRoute.update({ areaParkir: areaParkir.id, transaksi: id }).url, {}, {
       onSuccess: () => {
-        // Success message will be shown via flash
+        
       }
     })
   }
@@ -105,7 +119,6 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
   }
 
   const handleBarcodeScanned = (code: string) => {
-    // Extract transaction ID from barcode (format: TRX000001)
     const match = code.match(/TRX0*(\d+)/i)
     if (!match) {
       toast.error('Format barcode tidak valid')
@@ -114,7 +127,6 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
 
     const transactionId = parseInt(match[1])
     
-    // Find transaction in current page
     const transaction = transaksi.data.find(t => t.id === transactionId)
     
     if (!transaction) {
@@ -127,7 +139,6 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
       return
     }
 
-    // Proceed with checkout
     handleCheckout(transactionId)
   }
 
@@ -156,36 +167,93 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
         </DashboardHeader>
 
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Cari berdasarkan plat nomor atau pemilik kendaraan..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              <div className="relative flex-1">
+                <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari berdasarkan plat nomor atau pemilik kendaraan..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
 
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={(value) => {
-                setStatusFilter(value)
-                applyFilter({ status: value })
-              }}>
-                <SelectTrigger className='w-full max-w-48'>
-                  <SelectValue placeholder="Pilih status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Status</SelectLabel>
-                    <SelectItem value="all">Semua</SelectItem>
-                    <SelectItem value="ongoing">Sedang Parkir</SelectItem>
-                    <SelectItem value="completed">Selesai</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Button 
+                  variant={showDateFilter ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setShowDateFilter(!showDateFilter)}
+                  title={showDateFilter ? "Sembunyikan filter" : "Tampilkan filter"}
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+            
+            {showDateFilter && (
+              <div className="flex flex-col gap-4 p-4 bg-muted/30 rounded-lg border border-border">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+                    <Select value={statusFilter} onValueChange={(value) => {
+                      setStatusFilter(value)
+                      applyFilter({ status: value })
+                    }}>
+                      <SelectTrigger className='w-full'>
+                        <SelectValue placeholder="Pilih status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Status</SelectLabel>
+                          <SelectItem value="all">Semua</SelectItem>
+                          <SelectItem value="ongoing">Sedang Parkir</SelectItem>
+                          <SelectItem value="completed">Selesai</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground mb-1 block">Dari Tanggal</label>
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => {
+                        setDateFrom(e.target.value)
+                        applyFilter({ date_from: e.target.value, date_to: dateTo })
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground mb-1 block">Sampai Tanggal</label>
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => {
+                        setDateTo(e.target.value)
+                        applyFilter({ date_from: dateFrom, date_to: e.target.value })
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const today = new Date().toISOString().split('T')[0]
+                      setStatusFilter('all')
+                      setDateFrom(today)
+                      setDateTo(today)
+                      applyFilter({ status: undefined, date_from: today, date_to: today })
+                    }}
+                  >
+                    Reset Filter
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

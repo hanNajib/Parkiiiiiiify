@@ -18,13 +18,13 @@ trait HasSearchAndFilter
 
         if (empty($columns)) return $query;
 
-        return $query->where(function($q) use ($columns, $words) {
-            foreach($words as $word) {
+        return $query->where(function ($q) use ($columns, $words) {
+            foreach ($words as $word) {
                 $word = strtolower($word);
 
-                $q->where(function($sub) use ($word, $columns) {
-                    foreach($columns as $col) {
-                        if(Str::contains($col, '.')) {
+                $q->where(function ($sub) use ($word, $columns) {
+                    foreach ($columns as $col) {
+                        if (Str::contains($col, '.')) {
                             [$relation, $relCol] = explode('.', $col, 2);
                             $sub->orWhereHas($relation, fn($r) => $r->whereRaw("LOWER($relCol) LIKE ?", ["%$word%"]));
                         } else {
@@ -36,18 +36,28 @@ trait HasSearchAndFilter
         });
     }
 
-    public function scopeFilter($query) {
+    public function scopeFilter($query)
+    {
         $filters = request()->query();
         $filterable = $this->filterable ?? [];
-        
-        foreach($filters as $param => $value) {
-            if(!isset($filterable[$param]) ||  is_null($value) || $value === '') {
+
+        foreach ($filters as $param => $value) {
+            if (
+                !isset($filterable[$param]) ||
+                is_null($value) ||
+                $value === '' ||
+                $value === 'all'
+            ) {
+                continue;
+            }
+
+            if (!isset($filterable[$param]) ||  is_null($value) || $value === '') {
                 continue;
             }
 
             $column = $filterable[$param];
 
-            if(str_contains($column, '.')) {
+            if (str_contains($column, '.')) {
                 [$relation, $relationColumn] = explode('.', $column, 2);
                 $query->whereHas($relation, fn($q) => $q->where($relationColumn, $value));
             } else {

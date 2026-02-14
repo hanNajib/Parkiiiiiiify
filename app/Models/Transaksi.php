@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
 use App\Traits\Loggable;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,12 +25,27 @@ class Transaksi extends Model
         'status' => 'status',
         'area_parkir_id' => 'area_parkir_id',
         'petugas_id' => 'petugas_id',
+        'tanggal' => 'waktu_masuk',
     ];
 
     public function scopeSelf($query) {
         return $query->where('petugas_id', Auth::user()->id);
     }
 
+    public function scopeDateRange($query) {
+        $dateFrom = request()->query('date_from');
+        $dateTo = request()->query('date_to');
+
+        if ($dateFrom) {
+            $query->whereDate('waktu_masuk', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('waktu_masuk', '<=', $dateTo);
+        }
+
+        return $query;
+    }
 
     public function kendaraan()
     {

@@ -416,7 +416,6 @@ function OwnerDashboard({
             formRef.current.submit();
         }
         
-        // Reset loading state - file download won't reload the page
         setTimeout(() => {
             setIsDownloading(false);
         }, 2000);
@@ -441,7 +440,6 @@ function OwnerDashboard({
                     <p className="text-muted-foreground">Analisis bisnis dan performa</p>
                 </div>
 
-                {/* KPI Cards */}
                 <div className="grid gap-4 md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -487,7 +485,6 @@ function OwnerDashboard({
                     </Card>
                 </div>
 
-                {/* Download Rekap PDF */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -540,7 +537,6 @@ function OwnerDashboard({
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {/* Hidden input for form submission */}
                                     {selectedArea !== 'all' && (
                                         <input type="hidden" name="area_id" value={selectedArea} />
                                     )}
@@ -569,14 +565,13 @@ function OwnerDashboard({
                     </CardContent>
                 </Card>
 
-                {/* Revenue Trend */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Tren Pendapatan 30 Hari</CardTitle>
                         <CardDescription>Pendapatan dan jumlah transaksi harian</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ChartContainer config={revenueChartConfig} className="h-[300px] w-full">
+                        <ChartContainer config={revenueChartConfig} className="h-75 w-full">
                             <LineChart data={revenueData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis 

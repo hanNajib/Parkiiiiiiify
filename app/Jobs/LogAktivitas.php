@@ -25,9 +25,7 @@ class LogAktivitas implements ShouldQueue
         public ?int $targetId = null,
         public ?string $ipAddress = null,
     )
-    {
-        
-    }
+    {}
 
     /**
      * Execute the job.

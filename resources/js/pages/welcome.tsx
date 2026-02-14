@@ -45,7 +45,6 @@ export default function Welcome() {
         offset: ["start start", "end start"]
     });
 
-    // OPTIMASI #1: Kurangin range parallax biar gak terlalu berat
     const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
     const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
@@ -128,7 +127,7 @@ export default function Welcome() {
     const faqs = [
         {
             question: "Apakah bisa manage multiple area parkir dengan tarif berbeda?",
-            answer: "Tentu bisa! PaarkirBang support multi-area parkir dengan tarif yang bisa di-customize per area dan per jenis kendaraan (Motor/Mobil/Lainnya). Anda bisa set tarif flat atau per jam sesuai kebutuhan."
+            answer: "Tentu bisa! Parkify support multi-area parkir dengan tarif yang bisa di-customize per area dan per jenis kendaraan (Motor/Mobil/Lainnya). Anda bisa set tarif flat atau per jam sesuai kebutuhan."
         },
         {
             question: "Bagaimana sistem menghitung biaya parkir?",
@@ -236,9 +235,9 @@ export default function Welcome() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.2, duration: 0.5 }}
                                 >
-                                    PaarkirBang adalah sistem manajemen parkir berbasis web yang membantu Anda 
+                                    Parkify adalah sistem manajemen parkir berbasis web yang membantu Anda 
                                     mengelola multiple area parkir, transaksi kendaraan masuk-keluar, dan menghasilkan 
-                                    laporan analitik secara real-time. Dibangun dengan Laravel 11 + React + TypeScript.
+                                    laporan analitik secara real-time.
                                 </motion.p>
                                 
                                 <motion.div 
@@ -744,7 +743,7 @@ export default function Welcome() {
                             </span>
                         </h2>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                            Lihat bagaimana PaarkirBang membantu mengelola area parkir
+                            Lihat bagaimana Parkify membantu mengelola area parkir
                         </p>
                     </div>
 
@@ -829,8 +828,8 @@ export default function Welcome() {
                                 Siap untuk Memulai?
                             </h2>
                             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                                Bergabunglah dengan PaarkirBang hari ini dan rasakan kemudahan mengelola parkir 
-                                dengan Laravel 11 + React. Multi-area support, role-based access, dan export PDF/Excel siap pakai!
+                                Bergabunglah dengan Parkify hari ini dan rasakan kemudahan mengelola parkir 
+                                dengan Laravel 12 + React. Multi-area support, role-based access, dan export PDF/Excel siap pakai!
                             </p>
                             <div className="flex flex-wrap gap-4 justify-center pt-4">
                                 <Link href="/register">
@@ -845,7 +844,7 @@ export default function Welcome() {
                             </div>
                             <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm text-muted-foreground">
                                 {[
-                                    "Laravel 11 + React",
+                                    "Laravel 12 + React",
                                     "Multi-area parkir",
                                     "Export PDF & Excel"
                                 ].map((item, index) => (
@@ -866,7 +865,7 @@ export default function Welcome() {
                             <div className="md:col-span-2 space-y-4">
                                 <Logo />
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Sistem manajemen parkir berbasis web dengan Laravel 11 + React + TypeScript. 
+                                    Sistem manajemen parkir berbasis web dengan Laravel 12 + React + TypeScript. 
                                     Multi-area support, role-based access, dan export PDF/Excel.
                                 </p>
                                 <div className="flex gap-3">

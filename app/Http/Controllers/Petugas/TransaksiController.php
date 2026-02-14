@@ -15,6 +15,7 @@ class TransaksiController extends Controller
 {
     public function selectArea() {
         $areaParkir = AreaParkir::where('is_active', true)->get();
+        // return $areaParkir;
         return Inertia::render('_petugas/transaksi/SelectArea', [
             'areaParkir' => $areaParkir
         ]);
@@ -28,6 +29,7 @@ class TransaksiController extends Controller
             ->self()
             ->search()
             ->filter()
+            ->dateRange()
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -39,7 +41,6 @@ class TransaksiController extends Controller
             'total_revenue' => Transaksi::self()->where('area_parkir_id', $areaParkirId)->where('status', 'completed')->sum('total_biaya'),
         ];
 
-        // Get all kendaraan for create modal (exclude vehicles currently parked)
         $kendaraanParked = Transaksi::where('status', 'ongoing')
             ->pluck('kendaraan_id')
             ->toArray();
@@ -48,20 +49,21 @@ class TransaksiController extends Controller
             ->whereNotIn('id', $kendaraanParked)
             ->get();
         
-        // Get tarif for this area
         $tarifList = Tarif::where('area_parkir_id', $areaParkirId)
             ->where('is_active', true)
             ->get();
 
         return Inertia::render('_petugas/transaksi/Index', [
             'transaksi' => $data,
-            'stats' => $stats,
+            'stats' => $stats,  
             'areaParkir' => $areaParkir,
             'kendaraanList' => $kendaraanList,
             'tarifList' => $tarifList,
             'filter' => [
                 's' => $request->s,
                 'status' => $request->status,
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
             ]
         ]);
     }
@@ -72,7 +74,6 @@ class TransaksiController extends Controller
             'tarif_id' => 'required|exists:tarif,id',
         ]);
 
-        // Check if vehicle is already parked (ongoing transaction)
         $existingTransaction = Transaksi::where('kendaraan_id', $validated['kendaraan_id'])
             ->where('status', 'ongoing')
             ->first();
