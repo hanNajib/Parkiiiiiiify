@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    Route::middleware('role:petugas,admin,superadmin')->prefix('petugas')->group(function () {
+    Route::middleware('role:petugas')->prefix('petugas')->group(function () {
         Route::get('/transaksi/select-area', [TransaksiController::class, 'selectArea'])->name('transaksi.select-area');
         Route::prefix('transaksi/area/{areaParkir}')->name('transaksi.')->group(function () {
             Route::get('/', [TransaksiController::class, 'index'])->name('index');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AreaParkir;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +42,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'areaParkir' => AreaParkir::where('is_active', true)
+                ->select('id', 'nama', 'lokasi')
+                ->orderBy('nama')
+                ->get(),
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error' => fn() => $request->session()->get('error'),

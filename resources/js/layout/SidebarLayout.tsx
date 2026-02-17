@@ -7,19 +7,63 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useMemo, useEffect } from 'react';
 import { links } from '@/data/sidebar.config';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useAppStore } from '@/stores/useAppStores';
 import { Logo } from '@/components/logo-icon';
+import transaksi from '@/routes/transaksi';
+import { Ticket } from 'lucide-react';
+import type { SidebarLink as SidebarLinkType } from '@/data/sidebar.config';
 
 export const SidebarLayout = ({ children }: PropsWithChildren) => {
-  const { sidebarOpen, toggleSidebar } = useAppStore();
-  const { auth } = usePage<SharedData>().props;
+  const { sidebarOpen, toggleSidebar, cachedAreaParkir, setCachedAreaParkir } = useAppStore();
+  const { auth, areaParkir } = usePage<SharedData>().props;
   const role = auth.user.role;
 
-  const filteredLinks = links.filter((link) => {
+  // Update cache when areaParkir changes
+  useEffect(() => {
+    if (areaParkir?.length) {
+      setCachedAreaParkir(areaParkir);
+    }
+  }, [areaParkir, setCachedAreaParkir]);
+
+  // Use cached area parkir if current areaParkir is from server but prefer server data
+  const displayAreas = areaParkir?.length ? areaParkir : cachedAreaParkir;
+
+  const transaksiLink: SidebarLinkType = useMemo(() => {
+    const areaItems = displayAreas?.length ? displayAreas.map((area) => ({
+      label: area.nama,
+      href: transaksi.index({ areaParkir: area.id }).url,
+      role: ['petugas'] as string[],
+    })) : [];
+
+    // Add "Lihat Semua Area" at the top
+    const items = [
+      {
+        label: "Lihat Semua Area",
+        href: transaksi.selectArea().url,
+        role: ['petugas'] as string[],
+      },
+      ...areaItems,
+    ];
+    
+    return {
+      label: "Transaksi",
+      href: transaksi.selectArea().url,
+      icon: (
+        <Ticket className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      role: ['petugas'] as string[],
+      items: items.length > 0 ? items : undefined,
+      searchable: true,
+    };
+  }, [displayAreas]);
+
+  const allLinks = [...links, transaksiLink];
+
+  const filteredLinks = allLinks.filter((link) => {
     if (link.role === '*') return true;
     if (Array.isArray(link.role)) return link.role.includes(role);
     return link.role === role;

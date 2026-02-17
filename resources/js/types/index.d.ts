@@ -5,6 +5,7 @@ export interface Auth {
 export interface SharedData {
     name: string;
     auth: Auth;
+    areaParkir?: AreaParkir[];
     flash: {
         success?: string;
         error?: string;

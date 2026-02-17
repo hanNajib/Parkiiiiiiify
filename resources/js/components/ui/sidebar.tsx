@@ -10,8 +10,9 @@ import { TooltipTrigger } from "@radix-ui/react-tooltip";
 interface Links {
   label: string;
   href: string;
-  icon: React.JSX.Element | React.ReactNode;
+  icon?: React.JSX.Element | React.ReactNode;
   items?: Links[];
+  searchable?: boolean;
 }
 
 interface SidebarContextProps {
@@ -169,12 +170,21 @@ export const SidebarLink = ({
   );
   
   const [isOpen, setIsOpen] = useState(hasActiveSubItem || false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   React.useEffect(() => {
     if (hasActiveSubItem) {
       setIsOpen(true);
     }
   }, [hasActiveSubItem]);
+
+  const filteredItems = React.useMemo(() => {
+    if (!link.items || !searchTerm || !link.searchable) return link.items;
+    
+    return link.items.filter((item) =>
+      item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [link.items, searchTerm, link.searchable]);
 
   const motionProps = {
     animate: {
@@ -237,9 +247,29 @@ export const SidebarLink = ({
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-1 pl-6 mt-1"
             >
-              {link.items.map((subLink, idx) => (
-                <SidebarLink key={idx} link={subLink} className="text-sm" />
-              ))}
+              {link.searchable && (
+                <div className="mb-2 px-2">
+                  <input
+                    type="text"
+                    placeholder="Cari area..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full px-2 py-1 text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              )}
+              {filteredItems && filteredItems.length > 0 ? (
+                filteredItems.map((subLink, idx) => (
+                  <SidebarLink key={idx} link={subLink} className="text-sm" />
+                ))
+              ) : (
+                link.searchable && searchTerm && (
+                  <div className="px-2 py-1 text-xs text-muted-foreground">
+                    Tidak ada area ditemukan
+                  </div>
+                )
+              )}
             </motion.div>
           )}
         </AnimatePresence>

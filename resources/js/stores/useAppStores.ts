@@ -4,6 +4,12 @@ import { persist } from 'zustand/middleware'
 
 type Theme = 'light' | 'dark' | 'system';
 
+interface AreaParkir {
+  id: number;
+  nama: string;
+  lokasi?: string;
+}
+
 interface AppStore {
     sidebarOpen: boolean
     setSidebarOpen: (open: boolean) => void
@@ -14,6 +20,9 @@ interface AppStore {
     effectiveTheme: 'light' | 'dark'
     setEffectiveTheme: (theme: 'light' | 'dark') => void
     initializeTheme: () => void
+
+    cachedAreaParkir: AreaParkir[]
+    setCachedAreaParkir: (areas: AreaParkir[]) => void
 }
 
 export const useAppStore = create<AppStore>() (
@@ -46,13 +55,17 @@ export const useAppStore = create<AppStore>() (
 
                 root.classList.add(resolvedTheme)
                 set({ effectiveTheme: resolvedTheme})
-            }
+            },
+
+            cachedAreaParkir: [],
+            setCachedAreaParkir: (areas) => set({ cachedAreaParkir: areas }),
         }),
         {
             name: 'parkirbang',
             partialize: (state) => ({
                 sidebarOpen: state.sidebarOpen,
-                theme: state.theme
+                theme: state.theme,
+                cachedAreaParkir: state.cachedAreaParkir,
             })
         }
     )
