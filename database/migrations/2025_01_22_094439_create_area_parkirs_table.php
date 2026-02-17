@@ -17,10 +17,19 @@ return new class extends Migration
             $table->string('lokasi');
             $table->integer('kapasitas');
             $table->boolean('is_active')->default(true);
+            $table->enum('default_rule_type', [
+                'choose', // untuk area parkir yang belum punya aturan tarif, agar petugas bisa pilih jenis tarif saat buat transaksi
+                'flat',
+                'interval',
+                'progressive'
+            ])->default('choose');
+
+            
             $table->softDeletes();
             $table->timestamps();
-            
+
             $table->index('nama');
+            $table->index('default_rule_type');
             $table->index('is_active');
             $table->index(['is_active', 'kapasitas']);
         });
@@ -31,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('area_parkirs');
+        Schema::dropIfExists('area_parkir');
     }
 };

@@ -47,6 +47,7 @@ class AreaParkirController extends Controller
             'nama' => 'required',
             'lokasi' => 'required',
             'kapasitas' => 'required|integer',
+            'default_rule_type' => 'required|in:choose,flat,interval,progressive',
             'is_active' => 'required|boolean',
         ]);
 
@@ -80,6 +81,7 @@ class AreaParkirController extends Controller
             'nama' => 'required',
             'lokasi' => 'required',
             'kapasitas' => 'required|integer',
+            'default_rule_type' => 'required|in:choose,flat,interval,progressive',
             'is_active' => 'required|boolean',
         ]);
 

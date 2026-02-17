@@ -82,7 +82,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
     }
   }, [props.flash])
   
-  const applyFilter = () => {
+  const applyFilter = (options?: { page?: number }) => {
     router.get(
         transaksiRoute.index({ areaParkir: areaParkir.id }).url,
         {
@@ -90,6 +90,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
             status: statusFilter !== 'all' ? statusFilter : undefined,
             date_from: dateFrom || undefined,
             date_to: dateTo || undefined,
+            page: options?.page,
         },
     )
   }

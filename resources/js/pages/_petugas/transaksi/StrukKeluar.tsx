@@ -112,9 +112,9 @@ export default function StrukKeluar({ transaksi }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Harga Satuan:</span>
-              <span className="text-sm">{formatCurrency(transaksi.tarif?.price || 0)}</span>
+              <span className="text-sm">{formatCurrency((transaksi.tarif?.price as number) || 0)}</span>
             </div>
-            {transaksi.tarif?.rule_type === 'per_jam' && (
+            {transaksi.tarif?.rule_type === 'interval' && (
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Durasi (dibulatkan):</span>
                 <span className="text-sm">{Math.ceil((transaksi.durasi || 0) / 60)} jam</span>

@@ -31,6 +31,12 @@ interface Props {
 
 export default function Index({ areaParkir, stats, filter }: Props) {
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
+  const defaultRuleLabel: Record<string, string> = {
+    choose: 'Pilih Saat Transaksi',
+    flat: 'Flat (sekali bayar)',
+    interval: 'Interval (per blok waktu)',
+    progressive: 'Progresif (bertahap per jam)'
+  }
 
   return (
     <SidebarLayout>
@@ -98,6 +104,9 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                     Tarif Parkir
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Aturan Tarif Utama
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Tanggal Dibuat
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -132,6 +141,11 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                         ) : (
                         <Badge className='bg-red-500 text-white cursor-pointer' title='Silahkan Lengkapi Tarif Parkir'>Belum Lengkap</Badge>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="secondary">
+                          {defaultRuleLabel[area.default_rule_type] || area.default_rule_type}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {new Date(area.created_at).toLocaleDateString('en-US', {
@@ -169,7 +183,7 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={8} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <IconSearch className="h-12 w-12 text-muted-foreground/50" />
                         <p className="text-sm font-medium text-muted-foreground">

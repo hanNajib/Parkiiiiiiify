@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTrigger, 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import areaParkirRoute from "@/routes/area-parkir";
 import { AreaParkir, User } from "@/types";
@@ -18,6 +19,7 @@ export default function EditModal({ area }: {area: AreaParkir}) {
         nama: area.nama,
         lokasi: area.lokasi,
         kapasitas: area.kapasitas,
+        default_rule_type: area.default_rule_type ?? 'choose',
         is_active: area.is_active,
     });
 
@@ -86,6 +88,31 @@ export default function EditModal({ area }: {area: AreaParkir}) {
                             />
                             {errors.kapasitas && (
                                 <p className="text-sm text-destructive mt-1">{errors.kapasitas}</p>
+                            )}
+                        </Field>
+
+                        <Field>
+                            <Label htmlFor="default_rule_type">Aturan Tarif Utama</Label>
+                            <Select
+                                name="default_rule_type"
+                                value={data.default_rule_type}
+                                onValueChange={(value) => setData('default_rule_type', value as 'flat' | 'interval' | 'progressive' | 'choose')}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih aturan tarif" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="choose">Pilih Saat Transaksi</SelectItem>
+                                    <SelectItem value="flat">Flat (sekali bayar)</SelectItem>
+                                    <SelectItem value="interval">Interval (per blok waktu)</SelectItem>
+                                    <SelectItem value="progressive">Progresif (bertahap per jam)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Menentukan aturan tarif default saat membuat transaksi baru.
+                            </p>
+                            {errors.default_rule_type && (
+                                <p className="text-sm text-destructive mt-1">{errors.default_rule_type}</p>
                             )}
                         </Field>
                     </div>

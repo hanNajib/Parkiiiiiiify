@@ -76,6 +76,7 @@ export interface AreaParkir {
     lokasi: string;
     kapasitas: number;
     terisi: number;
+    default_rule_type: 'choose' | 'flat' | 'interval' | 'progressive';
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -86,11 +87,25 @@ export interface AreaParkir {
 
 export interface Tarif {
     id: number;
-    rule_type: 'flat' | 'per_jam';
-    price: number;
+    area_parkir_id: number;
+    rule_type: 'flat' | 'interval' | 'progressive';
     jenis_kendaraan: 'motor'| 'mobil' | 'lainnya';
+    interval_menit: number | null;
+    harga_awal: number | null;
+    harga_lanjutan: number | null;
+    maksimal_per_hari: number | null;
+    berlaku_dari: string | null;
+    berlaku_sampai: string | null;
+    progressive_rules: ProgressiveRule[] | null;
     is_active: boolean;
+    created_at: string;
+    updated_at: string;
     [key: string]: unknown;
+}
+
+interface ProgressiveRule {
+    jam_ke: number;
+    harga: number;
 }
 
 export interface Kendaraan {

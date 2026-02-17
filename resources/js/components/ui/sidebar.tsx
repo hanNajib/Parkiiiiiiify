@@ -209,7 +209,7 @@ export const SidebarLink = ({
             {link.icon}
             <motion.span
               {...motionProps}
-              className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre !p-0 !m-0"
+              className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre p-0! m-0!"
             >
               {link.label}
             </motion.span>
@@ -293,7 +293,7 @@ export const SidebarLink = ({
           {link.icon}
           <motion.span
             {...motionProps}
-            className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre !p-0 !m-0"
+            className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre p-0! m-0!"
           >
             {link.label}
           </motion.span>
@@ -356,11 +356,11 @@ export const SidebarMenuButton = React.forwardRef<
           "aria-disabled:pointer-events-none aria-disabled:opacity-50",
           "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground",
           "data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground",
-          "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2",
+          "group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2!",
           "[&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
           size === "default" && "h-8 text-sm",
           size === "sm" && "h-7 text-xs",
-          size === "lg" && "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+          size === "lg" && "h-12 text-sm group-data-[collapsible=icon]:p-0!",
           className
         )}
         {...props}

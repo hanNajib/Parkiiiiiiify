@@ -13,26 +13,82 @@ return new class extends Migration
     {
         Schema::create('tarif', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('area_parkir_id')->constrained('area_parkir')->cascadeOnDelete();
-            $table->decimal('price', 10, 2);
-            $table->enum('rule_type', ['flat', 'per_jam']);
-            $table->enum('jenis_kendaraan', ['motor', 'mobil', 'lainnya'])->default('lainnya');
+
+            $table->foreignId('area_parkir_id')
+                ->constrained('area_parkir')
+                ->cascadeOnDelete();
+
+            $table->enum('rule_type', [
+                'flat',
+                'interval',
+                'progressive'
+            ]);
+
+            $table->enum('jenis_kendaraan', [
+                'motor',
+                'mobil',
+                'lainnya'
+            ])->default('lainnya');
+
+            /*
+            |--------------------------------------------------------------------------
+            | INTERVAL / BLOCK CONFIG
+            |--------------------------------------------------------------------------
+            */
+
+            $table->integer('interval_menit')->nullable(); // ganti durasi_awal_menit
+            $table->decimal('harga_awal', 12, 2)->nullable();
+            $table->decimal('harga_lanjutan', 12, 2)->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | PROGRESSIVE CONFIG
+            |--------------------------------------------------------------------------
+            */
+
+            $table->json('progressive_rules')->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | LIMITER
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('maksimal_per_hari', 12, 2)->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | TIME BASED (Optional Advanced)
+            |--------------------------------------------------------------------------
+            */
+
+            $table->time('berlaku_dari')->nullable();
+            $table->time('berlaku_sampai')->nullable();
+
             $table->boolean('is_active')->default(true);
+
             $table->timestamps();
-            
-            // Indexes for performance
-            $table->index('jenis_kendaraan');
-            $table->index('is_active');
+
+            /*
+            |--------------------------------------------------------------------------
+            | INDEX & CONSTRAINT
+            |--------------------------------------------------------------------------
+            */
+
             $table->index('rule_type');
-            $table->index(['area_parkir_id', 'jenis_kendaraan', 'is_active']);
+
+            $table->unique([
+                'area_parkir_id',
+                'jenis_kendaraan',
+                'rule_type',
+                'berlaku_dari',
+                'berlaku_sampai'
+            ], 'unique_tarif_per_time_range');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('tarifs');
+        Schema::dropIfExists('tarif');
     }
 };
