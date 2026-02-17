@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{transaksi}', [TransaksiController::class, 'destroy'])->name('destroy');
             Route::get('/{transaksi}/cetak-struk-masuk', [TransaksiController::class, 'cetakStrukMasuk'])->name('cetak-struk-masuk');
             Route::get('/{transaksi}/cetak-struk-keluar', [TransaksiController::class, 'cetakStrukKeluar'])->name('cetak-struk-keluar');
+            Route::get('/lookup-barcode/{code}', [TransaksiController::class, 'lookupByBarcode'])->name('lookup-barcode');
         });
     });
 });

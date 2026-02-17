@@ -19,6 +19,9 @@ interface ConfirmDeleteProps {
   description?: string;
   children: ReactNode;
   onSuccess?: () => void;
+  cancelText?: string;
+  confirmText?: string;
+  variant?: "destructive" | "default";
 }
 
 export function ConfirmDelete({ 
@@ -26,7 +29,10 @@ export function ConfirmDelete({
   title = "Konfirmasi Penghapusan",
   description = "Tindakan ini tidak dapat dibatalkan. Data yang sudah dihapus akan hilang secara permanen.",
   children,
-  onSuccess
+  onSuccess,
+  cancelText = "Batal",
+  confirmText = "Hapus",
+  variant = "destructive"
 }: ConfirmDeleteProps) {
   const { delete: deleteAction, processing } = useForm({});
   
@@ -39,12 +45,16 @@ export function ConfirmDelete({
     });
   }
 
+  const buttonClass = variant === "destructive" 
+    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+    : "";
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         {children}
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="w-full max-w-sm">
         <form onSubmit={handleSubmit}>
           <AlertDialogHeader>
             <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -52,24 +62,24 @@ export function ConfirmDelete({
               {description}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={processing}>
-              Batal
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="mr-4" disabled={processing}>
+              {cancelText}
             </AlertDialogCancel>
             <AlertDialogAction 
               type="submit" 
               disabled={processing}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className={buttonClass}
             >
               {processing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Menghapus...
+                  {confirmText}...
                 </>
               ) : (
                 <>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Hapus
+                  {confirmText}
                 </>
               )}
             </AlertDialogAction>

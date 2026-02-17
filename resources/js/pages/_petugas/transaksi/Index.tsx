@@ -3,18 +3,15 @@ import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { IconSearch } from '@tabler/icons-react'
-import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Transaksi, PaginatedData, AreaParkir, Kendaraan, Tarif, PageProps } from '@/types'
 import DashboardHeader from '@/components/dashboard-header'
 import StatCard from '@/components/StatCard'
-import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from '@/components/ui/dropdown-menu'
-import { EllipsisVertical, Trash, Clock, DollarSign, CheckCircle, Receipt, MapPin, ArrowLeft, Calendar } from 'lucide-react'
+import { Trash, Clock, DollarSign, CheckCircle, Receipt, ArrowLeft, Calendar } from 'lucide-react'
 import { ConfirmDelete } from '@/components/confirmModal'
 import { router } from '@inertiajs/react'
 import transaksiRoute from '@/routes/transaksi'
 import CreateModal from './CreateModal'
-import EditModal from './EditModal'
 import { Badge } from '@/components/ui/badge'
 import BarcodeScanner from '@/components/BarcodeScanner'
 import { toast } from 'sonner'
@@ -52,20 +49,24 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const isFirstRender = useRef(true)
   
+  // Auto-sync filters: whenever filter state changes, apply filter
+  useEffect(() => {
+    // Skip first render to avoid duplicate request on mount
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    // Apply filter whenever debounced search or other filters change
+    applyFilter()
+  }, [debouncedSearchTerm, statusFilter, dateFrom, dateTo])
+  
+  // Initialize date range on first mount if not filtered
   useEffect(() => {
     if (showDateFilter && !filter.date_from && !filter.date_to) {
       if (!dateFrom) setDateFrom(today)
       if (!dateTo) setDateTo(today)
     }
   }, [showDateFilter])
-  
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    applyFilter({ s: debouncedSearchTerm })
-  }, [debouncedSearchTerm])
 
   useEffect(() => {
     const flash = props.flash as any
@@ -81,15 +82,14 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
     }
   }, [props.flash])
   
-  const applyFilter = (extra = {}) => {
+  const applyFilter = () => {
     router.get(
         transaksiRoute.index({ areaParkir: areaParkir.id }).url,
         {
-            s: searchTerm,
+            s: debouncedSearchTerm,  // Use debounced value to prevent spam
             status: statusFilter !== 'all' ? statusFilter : undefined,
             date_from: dateFrom || undefined,
             date_to: dateTo || undefined,
-            ...extra
         },
     )
   }
@@ -118,7 +118,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
     return `${hours}j ${mins}m`
   }
 
-  const handleBarcodeScanned = (code: string) => {
+  const handleBarcodeScanned = async (code: string) => {
     const match = code.match(/TRX0*(\d+)/i)
     if (!match) {
       toast.error('Format barcode tidak valid')
@@ -127,19 +127,29 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
 
     const transactionId = parseInt(match[1])
     
-    const transaction = transaksi.data.find(t => t.id === transactionId)
+    const transaction = async () => {
+      try {
+        const res = await fetch(transaksiRoute.lookupBarcode({ areaParkir: areaParkir.id, code }).url)
+        if (!res.ok) throw new Error('Transaksi tidak ditemukan')
+        return await res.json() as Transaksi
+      } catch(error) {
+        return null
+      }
+    }
     
-    if (!transaction) {
+    const foundTransaction = await transaction()
+    if (!foundTransaction) {
       toast.error(`Transaksi #${transactionId} tidak ditemukan di area ini`)
       return
     }
+    console.log('Found transaction:', foundTransaction)
 
-    if (transaction.status !== 'ongoing') {
+    if (foundTransaction.status !== 'ongoing') {
       toast.error('Transaksi ini sudah selesai')
       return
     }
 
-    handleCheckout(transactionId)
+    handleCheckout(foundTransaction.id)
   }
 
   return (
@@ -180,6 +190,26 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
                 />
               </div>
 
+              <div className="w-full md:w-56">
+                <label className="sr-only">Status</label>
+                <Select value={statusFilter} onValueChange={(value) => {
+                  setStatusFilter(value)
+                  // applyFilter triggered automatically via useEffect
+                }}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Status</SelectLabel>
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="ongoing">Sedang Parkir</SelectItem>
+                      <SelectItem value="completed">Selesai</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex gap-2">
                 <Button 
                   variant={showDateFilter ? "default" : "outline"}
@@ -193,64 +223,43 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
             </div>
             
             {showDateFilter && (
-              <div className="flex flex-col gap-4 p-4 bg-muted/30 rounded-lg border border-border">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Status</label>
-                    <Select value={statusFilter} onValueChange={(value) => {
-                      setStatusFilter(value)
-                      applyFilter({ status: value })
-                    }}>
-                      <SelectTrigger className='w-full'>
-                        <SelectValue placeholder="Pilih status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Status</SelectLabel>
-                          <SelectItem value="all">Semua</SelectItem>
-                          <SelectItem value="ongoing">Sedang Parkir</SelectItem>
-                          <SelectItem value="completed">Selesai</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Dari Tanggal</label>
+              <div className="flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-4">
+                <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Dari Tanggal</label>
                     <Input
                       type="date"
                       value={dateFrom}
                       onChange={(e) => {
                         setDateFrom(e.target.value)
-                        applyFilter({ date_from: e.target.value, date_to: dateTo })
+                        // applyFilter triggered automatically via useEffect
                       }}
                     />
                   </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Sampai Tanggal</label>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Sampai Tanggal</label>
                     <Input
                       type="date"
                       value={dateTo}
                       onChange={(e) => {
                         setDateTo(e.target.value)
-                        applyFilter({ date_from: dateFrom, date_to: e.target.value })
                       }}
                     />
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      const today = new Date().toISOString().split('T')[0]
-                      setStatusFilter('all')
-                      setDateFrom(today)
-                      setDateTo(today)
-                      applyFilter({ status: undefined, date_from: today, date_to: today })
-                    }}
-                  >
-                    Reset Filter
-                  </Button>
+                  <div className="flex gap-2 md:justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0]
+                        setStatusFilter('all')
+                        setDateFrom(today)
+                        setDateTo(today)
+                      }}
+                    >
+                      Reset Filter
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -289,6 +298,9 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
                     Kendaraan
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Kode Transaksi
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Waktu Masuk
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -307,91 +319,113 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
               </thead>
               <tbody className="divide-y divide-border">
                 {transaksi.data.length > 0 ? (
-                  transaksi.data.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="group transition-colors hover:bg-muted/50"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
-                            {item.kendaraan?.plat_nomor?.charAt(0) || 'K'}
-                          </div>
-                          <div>
-                            <div className="font-medium text-foreground">
-                              {item.kendaraan?.plat_nomor || '-'}
+                  transaksi.data.map((item) => {
+                    return (
+                      <tr
+                        key={item.id}
+                        className="group transition-colors hover:bg-muted/50"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/10 text-primary">
+                              {item.kendaraan?.plat_nomor?.charAt(0) || 'K'}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {item.kendaraan?.pemilik || '-'}
+                            <div>
+                              <div className="font-medium text-foreground">
+                                {item.kendaraan?.plat_nomor || '-'}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {item.kendaraan?.pemilik || '-'}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {new Date(item.waktu_masuk).toLocaleString('id-ID', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {formatDuration(item.durasi)}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium">
-                        {formatCurrency(item.total_biaya)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={item.status === 'ongoing' ? 'default' : 'secondary'}>
-                          {item.status === 'ongoing' ? 'Parkir' : 'Selesai'}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='icon' className='float-right cursor-pointer'>
-                              <EllipsisVertical />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuGroup>
-                              <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                              {item.status === 'ongoing' && (
-                                <>
-                                  <DropdownMenuItem 
-                                    onClick={() => handleCheckout(item.id)}
-                                  >
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Checkout
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => window.open(transaksiRoute.cetakStrukMasuk({ areaParkir: areaParkir.id, transaksi: item.id }).url, '_blank')}
-                                  >
-                                    <Receipt className="mr-2 h-4 w-4" />
-                                    Cetak Struk Masuk
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {item.status === 'completed' && (
-                                <DropdownMenuItem 
-                                  onClick={() => window.open(transaksiRoute.cetakStrukKeluar({ areaParkir: areaParkir.id, transaksi: item.id }).url, '_blank')}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {item.kode_transaksi + item.token}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {new Date(item.waktu_masuk).toLocaleString('id-ID', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {formatDuration(item.durasi)}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium">
+                          {formatCurrency(item.total_biaya)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant={item.status === 'ongoing' ? 'default' : 'secondary'}>
+                            {item.status === 'ongoing' ? 'Parkir' : 'Selesai'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex justify-end gap-2">
+                            {item.status === 'ongoing' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleCheckout(item.id)}
+                                  title="Checkout kendaraan"
                                 >
-                                  <Receipt className="mr-2 h-4 w-4" />
-                                  Cetak Struk Keluar
-                                </DropdownMenuItem>
-                              )}
-                              <ConfirmDelete deleteUrl={transaksiRoute.destroy({ areaParkir: areaParkir.id, transaksi: item.id }).url}>
-                                <DropdownMenuItem variant='destructive' onSelect={(e) => e.preventDefault()}>
-                                  <Trash className="mr-2 h-4 w-4" />Hapus
-                                </DropdownMenuItem>
-                              </ConfirmDelete>
-                            </DropdownMenuGroup>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => window.open(
+                                    transaksiRoute.cetakStrukMasuk({
+                                      areaParkir: areaParkir.id,
+                                      transaksi: item.id
+                                    }).url,
+                                    '_blank'
+                                  )}
+                                  title="Cetak struk masuk"
+                                >
+                                  <Receipt className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            {item.status === 'completed' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(
+                                  transaksiRoute.cetakStrukKeluar({
+                                    areaParkir: areaParkir.id,
+                                    transaksi: item.id
+                                  }).url,
+                                  '_blank'
+                                )}
+                                title="Cetak struk keluar"
+                              >
+                                <Receipt className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <ConfirmDelete
+                              variant='default'
+                              deleteUrl={transaksiRoute.destroy({
+                                areaParkir: areaParkir.id,
+                                transaksi: item.id
+                              }).url}
+                            >
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                title="Hapus transaksi"
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </ConfirmDelete>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center">

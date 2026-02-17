@@ -8,7 +8,6 @@ interface Props {
 
 export default function StrukMasuk({ transaksi }: Props) {
   useEffect(() => {
-    // Auto print when component mounts
     window.print()
   }, [])
 
@@ -62,7 +61,7 @@ export default function StrukMasuk({ transaksi }: Props) {
         {/* Barcode */}
         <div className="flex justify-center my-4 border-y-2 border-dashed border-gray-300 py-4">
           <Barcode 
-            value={`TRX${transaksi.id.toString().padStart(6, '0')}`}
+            value={`TRX${transaksi.id.toString().padStart(6, '0')}${transaksi.token}`}
             width={1.5}
             height={60}
             fontSize={12}

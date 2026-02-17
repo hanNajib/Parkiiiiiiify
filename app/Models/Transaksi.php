@@ -14,9 +14,9 @@ class Transaksi extends Model
 
     protected $table = 'transaksi';
     protected $guarded = []; 
+    protected $appends = ['kode_transaksi'];
     protected $searchable = [
-        'kendaraan.nomor_plat',
-        'tarif.nama',
+        'kendaraan.plat_nomor',
         'petugas.name',
         'areaParkir.nama',
     ];
@@ -65,5 +65,9 @@ class Transaksi extends Model
     public function areaParkir()
     {
         return $this->belongsTo(AreaParkir::class);
+    }
+
+    public function getKodeTransaksiAttribute() {
+        return 'TRX' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
     }
 }

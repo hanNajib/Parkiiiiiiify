@@ -9,13 +9,14 @@ use App\Models\Tarif;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use SebastianBergmann\Environment\Console;
 
 class TransaksiController extends Controller
 {
     public function selectArea() {
         $areaParkir = AreaParkir::where('is_active', true)->get();
-        // return $areaParkir;
         return Inertia::render('_petugas/transaksi/SelectArea', [
             'areaParkir' => $areaParkir
         ]);
@@ -89,6 +90,7 @@ class TransaksiController extends Controller
             'petugas_id' => Auth::id(),
             'waktu_masuk' => now(),
             'status' => 'ongoing',
+            'token' => strtoupper(substr(bin2hex(random_bytes(8)), 0, 16)),
         ]);
 
         return redirect()->back()->with([
@@ -107,18 +109,15 @@ class TransaksiController extends Controller
         $transaksi->waktu_keluar = now();
         $transaksi->status = 'completed';
         
-        // Calculate duration in hours (rounded up)
         $waktuMasuk = \Carbon\Carbon::parse($transaksi->waktu_masuk);
         $waktuKeluar = \Carbon\Carbon::parse($transaksi->waktu_keluar);
         $durasi = $waktuMasuk->diffInMinutes($waktuKeluar);
         $transaksi->durasi = $durasi;
         
-        // Calculate total cost
         $tarif = Tarif::find($transaksi->tarif_id);
         if ($tarif->rule_type === 'flat') {
             $transaksi->total_biaya = $tarif->price;
         } else {
-            // per_jam - round up to nearest hour
             $hours = ceil($durasi / 60);
             $transaksi->total_biaya = $tarif->price * $hours;
         }
@@ -160,5 +159,26 @@ class TransaksiController extends Controller
         return Inertia::render('_petugas/transaksi/StrukKeluar', [
             'transaksi' => $transaksi
         ]);
+    }
+
+    public function lookupByBarcode($areaParkirId, string $code) {
+        Log::info("Lookup transaksi by barcode: $code");
+
+        $match = [];
+        if (preg_match('/^TRX0*(\d+)[\-:\s]?([A-F0-9]{16})$/i', $code, $match)) {
+            $transaksiId = (int) $match[1];
+            $token = strtoupper($match[2]);
+
+            $transaksi = Transaksi::with(['kendaraan', 'tarif', 'petugas', 'areaParkir'])
+                ->where('area_parkir_id', $areaParkirId)
+                ->where('token', $token)
+                ->find($transaksiId);
+
+            if ($transaksi) {
+                return response()->json($transaksi);
+            }
+        }
+
+        return response()->json(['success' => false, 'message' => 'Transaksi tidak ditemukan'], 404);
     }
 }
