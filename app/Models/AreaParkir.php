@@ -15,31 +15,38 @@ class AreaParkir extends Model
     protected $guarded = [];
     protected $appends = ['tarif_lengkap', 'terisi'];
 
-    public function tarif() {
+    public function tarif()
+    {
         return $this->hasMany(Tarif::class, 'area_parkir_id');
     }
 
-    public function transaksi() {
+    public function transaksi()
+    {
         return $this->hasMany(Transaksi::class, 'area_parkir_id');
     }
 
-    public function getTarifLengkapAttribute() {
+    public function getTarifLengkapAttribute()
+    {
         $jenisKendaraan = ['motor', 'mobil', 'lainnya'];
-        $ruleTypes = ['flat', 'per_jam'];
 
         foreach ($jenisKendaraan as $jenis) {
-            foreach ($ruleTypes as $rule) {
-                $exists = $this->tarif()->where('jenis_kendaraan', $jenis)->where('rule_type', $rule)->exists();
-                if (!$exists) {
-                    return false;
-                }
+
+            $exists = $this->tarif()
+                ->where('jenis_kendaraan', $jenis)
+                ->where('rule_type', $this->default_rule_type)
+                ->where('is_active', true)
+                ->exists();
+
+            if (!$exists) {
+                return false;
             }
         }
 
         return true;
     }
 
-    public function getTerisiAttribute() {
+    public function getTerisiAttribute()
+    {
         return $this->transaksi()->where('status', 'ongoing')->count();
     }
 }

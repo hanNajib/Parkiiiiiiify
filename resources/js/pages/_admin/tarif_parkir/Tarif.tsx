@@ -6,11 +6,9 @@ import { AreaParkir, Tarif as TarifType, PaginatedData } from "@/types"
 import { Link } from "@inertiajs/react"
 import { IconSearch } from "@tabler/icons-react"
 import { useState } from "react"
-import CreateModal from "./CreateModal"
-import EditModal from "./EditModal"
-import { ArrowLeft, CaseUpper, MapPinIcon, ParkingSquareIcon, EllipsisVertical, Trash } from "lucide-react"
+import { ArrowLeft, EllipsisVertical, Trash, Edit } from "lucide-react"
 import tarifParkir from "@/routes/tarif-parkir"
-import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu"
 import { ConfirmDelete } from "@/components/confirmModal"
 import { Badge } from "@/components/ui/badge"
 
@@ -23,7 +21,9 @@ export default function Tarif({ areaParkir, tarif, allTarif }: { areaParkir: Are
                 <DashboardHeader title={`Data Tarif - ${areaParkir.nama}`} description={`Kelola dan kelola tarif parkir untuk area ${areaParkir.nama}`}>
                     <div className="flex gap-2 space-x-2">
                         <Link href={tarifParkir.index().url}><Button variant={'secondary'}><ArrowLeft />Kembali</Button></Link>
-                        <CreateModal idArea={areaParkir.id} existingTarif={allTarif} />
+                        <Link href={`/admin/tarif-parkir/area/${areaParkir.id}/create`}>
+                            <Button variant={'default'}>Tambah Tarif</Button>
+                        </Link>
                     </div>
                 </DashboardHeader>
 
@@ -54,10 +54,16 @@ export default function Tarif({ areaParkir, tarif, allTarif }: { areaParkir: Are
 
 
 function TarifCard({ tarif }: { tarif: TarifType}) {
-    const ruleType = {
-        'per_jam': 'Per Jam',
-        'flat': 'Flat'
+    const ruleType: Record<string, string> = {
+        'flat': 'Flat',
+        'interval': 'Per Interval',
+        'progressive': 'Progressive'
     }
+
+    const formatTime = (time: string | null) => {
+        if (!time) return '-';
+        return time.substring(0, 5);
+    };
 
     return (
         <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
@@ -87,7 +93,12 @@ function TarifCard({ tarif }: { tarif: TarifType}) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuGroup>
-                            <EditModal tarif={tarif} />
+                            <DropdownMenuItem asChild>
+                                <Link href={tarifParkir.edit(tarif.id).url} className="flex items-center">
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                </Link>
+                            </DropdownMenuItem>
                             <ConfirmDelete
                                 deleteUrl={tarifParkir.destroy(tarif.id).url}
                             >
@@ -106,18 +117,89 @@ function TarifCard({ tarif }: { tarif: TarifType}) {
 
             <div className="my-4 h-px bg-border" />
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Tipe Harga</span>
                     <span className="font-medium">{ruleType[tarif.rule_type]}</span>
                 </div>
 
                 <div className="flex justify-between">
-                    <span className="text-muted-foreground">Harga</span>
+                    <span className="text-muted-foreground">Harga Awal</span>
                     <span className="font-semibold text-primary">
-                        Rp {tarif.price.toLocaleString("id-ID")}
+                        Rp {tarif.harga_awal ? tarif.harga_awal.toLocaleString("id-ID") : '-'}
                     </span>
                 </div>
+
+                {tarif.rule_type === 'interval' && tarif.interval_menit && (
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Interval</span>
+                        <span className="font-medium">{tarif.interval_menit} menit</span>
+                    </div>
+                )}
+
+                {tarif.rule_type === 'interval' && tarif.harga_lanjutan && (
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Harga Lanjutan</span>
+                        <span className="font-semibold text-primary">
+                            Rp {tarif.harga_lanjutan.toLocaleString("id-ID")}
+                        </span>
+                    </div>
+                )}
+
+                {tarif.rule_type === 'progressive' && (() => {
+                    const rawRules = tarif.progressive_rules as unknown;
+                    let rules: any[] = [];
+                    if (Array.isArray(rawRules)) {
+                        rules = rawRules;
+                    } else if (typeof rawRules === 'string') {
+                        try {
+                            const parsed = JSON.parse(rawRules);
+                            rules = Array.isArray(parsed) ? parsed : [];
+                        } catch {
+                            rules = [];
+                        }
+                    }
+
+                    if (rules.length === 0) return null;
+
+                    const visibleRules = rules.slice(0, 3);
+                    const hasMore = rules.length > 3;
+
+                    return (
+                        <div className="space-y-2">
+                            <span className="text-muted-foreground text-xs font-medium block">Progressive Rules:</span>
+                            <div className="bg-muted/50 rounded p-2 space-y-1">
+                                {visibleRules.map((rule: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between text-xs">
+                                        <span>Jam {rule.jam_ke}:</span>
+                                        <span className="font-medium">Rp {Number(rule.harga).toLocaleString("id-ID")}</span>
+                                    </div>
+                                ))}
+                                {hasMore && (
+                                    <div className="text-xs text-muted-foreground">...</div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {tarif.maksimal_per_hari && (
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Maks/Hari</span>
+                        <span className="font-medium">
+                            Rp {tarif.maksimal_per_hari.toLocaleString("id-ID")}
+                        </span>
+                    </div>
+                )}
+
+                {tarif.berlaku_dari || tarif.berlaku_sampai ? (
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Waktu Berlaku</span>
+                        <span className="font-medium">
+                            {formatTime(tarif.berlaku_dari)} - {formatTime(tarif.berlaku_sampai)}
+                        </span>
+                    </div>
+                ) : null}
             </div>
         </div>
     )

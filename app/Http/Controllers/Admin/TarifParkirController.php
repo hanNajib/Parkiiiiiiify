@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tarif\StoreRequest;
+use App\Http\Requests\Tarif\UpdateRequest;
 use App\Models\AreaParkir;
 use App\Models\Tarif;
 use Illuminate\Http\Request;
@@ -26,43 +28,44 @@ class TarifParkirController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        $areaParkirId = $request->query('areaParkir');
+
+        if ($areaParkirId) {
+            $areaParkir = AreaParkir::findOrFail($areaParkirId);
+            return $this->createForArea($areaParkir);
+        }
+
+        return redirect()
+            ->route('tarif-parkir.index')
+            ->with('error', 'Pilih area parkir terlebih dahulu.');
+    }
+
+    /**
+     * Show the create page for a specific area parkir.
+     */
+    public function createForArea(AreaParkir $areaParkir)
+    {
+        $existingTarif = Tarif::where('area_parkir_id', $areaParkir->id)->get();
+
+        return Inertia::render('_admin/tarif_parkir/Create', [
+            'areaParkir' => $areaParkir,
+            'existingTarif' => $existingTarif,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        $attribute = $request->validate([
-            'area_parkir_id' => 'required|exists:area_parkir,id',
-            'rule_type' => 'required|in:flat,per_jam',
-            'price' => 'required',
-            'jenis_kendaraan' => 'required|in:motor,mobil,lainnya'
-        ]);
-        
-        // Validasi kombinasi unique
-        $existingTarif = Tarif::where('area_parkir_id', $attribute['area_parkir_id'])
-            ->where('jenis_kendaraan', $attribute['jenis_kendaraan'])
-            ->where('rule_type', $attribute['rule_type'])
-            ->first();
-            
-        if ($existingTarif) {
-            return redirect()->back()->withErrors([
-                'jenis_kendaraan' => 'Kombinasi jenis kendaraan dan tipe harga sudah ada untuk area parkir ini.'
-            ])->withInput();
-        }
+        Tarif::create($request->validated());
 
-        try {
-            Tarif::create($attribute);
-            return redirect()->route('tarif-parkir.area', ['areaParkir' => $attribute['area_parkir_id']])->with('success', 'Tarif Parkir Berhasil Ditambahkan');
-        } catch (\Exception $e) {
-            return redirect()->route('tarif-parkir.area', ['areaParkir' => $attribute['area_parkir_id']])->with('error', 'Tarif Parkir Gagal Ditambahkan: ' . $e->getMessage());
-        }
+        return redirect()
+            ->route('tarif-parkir.area', ['areaParkir' => $request->area_parkir_id])
+            ->with('success', 'Tarif Parkir Berhasil Ditambahkan');
     }
-
     /**
      * Display the specified resource.
      */
@@ -76,21 +79,24 @@ class TarifParkirController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $tarif = Tarif::findOrFail($id);
+        $areaParkir = AreaParkir::findOrFail($tarif->area_parkir_id);
+
+        return Inertia::render('_admin/tarif_parkir/Edit', [
+            'tarif' => $tarif,
+            'areaParkir' => $areaParkir,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateRequest $request, string $id)
     {
         $tarif = Tarif::findOrFail($id);
-        
-        $attribute = $request->validate([
-            'price' => 'required|numeric|min:0',
-            'is_active' => 'boolean'
-        ]);
-        
+
+        $attribute = $request->validated();
+
         try {
             $tarif->update($attribute);
             return redirect()->back()->with('success', 'Tarif Parkir Berhasil Diperbarui');
@@ -106,7 +112,7 @@ class TarifParkirController extends Controller
     {
         $tarif = Tarif::findOrFail($id);
         $areaParkirId = $tarif->area_parkir_id;
-        
+
         try {
             $tarif->delete();
             return redirect()->route('tarif-parkir.area', ['areaParkir' => $areaParkirId])->with('success', 'Tarif Parkir Berhasil Dihapus');
@@ -122,7 +128,7 @@ class TarifParkirController extends Controller
     {
         $tarif = Tarif::where('area_parkir_id', $areaParkir->id)->search()->latest()->paginate(20);
         $allTarif = Tarif::where('area_parkir_id', $areaParkir->id)->get();
-        
+
         return Inertia::render('_admin/tarif_parkir/Tarif', [
             'areaParkir' => $areaParkir,
             'tarif' => $tarif,

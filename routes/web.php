@@ -37,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('log-aktivitas', LogAktivitasController::class)->only(['index', 'show', 'destroy'])->middleware('role:superadmin');
         Route::prefix('tarif-parkir')->name('tarif-parkir.')->group(function () {
             Route::get('area/{areaParkir}', [TarifParkirController::class, 'area'])->name('area');
+            Route::get('area/{areaParkir}/create', [TarifParkirController::class, 'createForArea'])->name('area-create');
         });
     });
 

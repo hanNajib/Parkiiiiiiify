@@ -86,7 +86,7 @@ class TransaksiController extends Controller
         if (!$tarif->is_active) {
             return redirect()->back()->with('error', 'Tarif tidak aktif.');
         }
-        
+
         $existingTransaction = Transaksi::where('kendaraan_id', $validated['kendaraan_id'])
             ->where('status', 'ongoing')
             ->first();
@@ -113,32 +113,15 @@ class TransaksiController extends Controller
 
     public function update(Request $request, $areaParkirId, $id)
     {
-        return DB::transaction(function () use ($areaParkirId, $id) {
+        return DB::transaction(function () use($areaParkirId, $id) {
             $transaksi = Transaksi::where('area_parkir_id', $areaParkirId)
-                ->lockForUpdate()
-                ->findOrFail($id);
-
-            if ($transaksi->status === 'completed') {
-                return redirect()->back()->with('error', 'Transaksi sudah selesai');
+                                ->lockForUpdate()
+                                ->findOrFail($id);
+            if($transaksi->status === 'completed') {
+                return redirect()->back()->with('error', 'Transaksi sudah selesai.');
             }
 
-            $transaksi->waktu_keluar = now();
-            $transaksi->status = 'completed';
-
-            $waktuMasuk = \Carbon\Carbon::parse($transaksi->waktu_masuk);
-            $waktuKeluar = \Carbon\Carbon::parse($transaksi->waktu_keluar);
-            $durasi = $waktuMasuk->diffInMinutes($waktuKeluar);
-            $transaksi->durasi = $durasi;
-
-            $tarif = Tarif::find($transaksi->tarif_id);
-            if ($tarif->rule_type === 'flat') {
-                $transaksi->total_biaya = $tarif->price;
-            } else {
-                $hours = ceil($durasi / 60);
-                $transaksi->total_biaya = $tarif->price * $hours;
-            }
-
-            $transaksi->save();
+            $transaksi->selesaikan();
 
             return redirect()->back()->with([
                 'success' => 'Transaksi berhasil diselesaikan',
