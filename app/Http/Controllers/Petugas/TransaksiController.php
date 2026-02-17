@@ -79,6 +79,14 @@ class TransaksiController extends Controller
             'tarif_id' => 'required|exists:tarif,id',
         ]);
 
+        $tarif = Tarif::findOrFail($validated['tarif_id']);
+        if ($tarif->area_parkir_id != $areaParkirId) {
+            return redirect()->back()->with('error', 'Tarif tidak valid untuk area parkir ini.');
+        }
+        if (!$tarif->is_active) {
+            return redirect()->back()->with('error', 'Tarif tidak aktif.');
+        }
+        
         $existingTransaction = Transaksi::where('kendaraan_id', $validated['kendaraan_id'])
             ->where('status', 'ongoing')
             ->first();

@@ -84,7 +84,19 @@ class TarifParkirController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $tarif = Tarif::findOrFail($id);
+        
+        $attribute = $request->validate([
+            'price' => 'required|numeric|min:0',
+            'is_active' => 'boolean'
+        ]);
+        
+        try {
+            $tarif->update($attribute);
+            return redirect()->back()->with('success', 'Tarif Parkir Berhasil Diperbarui');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Tarif Parkir Gagal Diperbarui: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -92,7 +104,15 @@ class TarifParkirController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $tarif = Tarif::findOrFail($id);
+        $areaParkirId = $tarif->area_parkir_id;
+        
+        try {
+            $tarif->delete();
+            return redirect()->route('tarif-parkir.area', ['areaParkir' => $areaParkirId])->with('success', 'Tarif Parkir Berhasil Dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Tarif Parkir Gagal Dihapus: ' . $e->getMessage());
+        }
     }
 
     /**

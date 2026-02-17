@@ -7,8 +7,12 @@ import { Link } from "@inertiajs/react"
 import { IconSearch } from "@tabler/icons-react"
 import { useState } from "react"
 import CreateModal from "./CreateModal"
-import { ArrowLeft, CaseUpper, MapPinIcon, ParkingSquareIcon } from "lucide-react"
+import EditModal from "./EditModal"
+import { ArrowLeft, CaseUpper, MapPinIcon, ParkingSquareIcon, EllipsisVertical, Trash } from "lucide-react"
 import tarifParkir from "@/routes/tarif-parkir"
+import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu"
+import { ConfirmDelete } from "@/components/confirmModal"
+import { Badge } from "@/components/ui/badge"
 
 export default function Tarif({ areaParkir, tarif, allTarif }: { areaParkir: AreaParkir, tarif: PaginatedData<TarifType>, allTarif: TarifType[] }) {
     const [searchTerm, setSearchTerm] = useState<string>('')
@@ -50,8 +54,6 @@ export default function Tarif({ areaParkir, tarif, allTarif }: { areaParkir: Are
 
 
 function TarifCard({ tarif }: { tarif: TarifType}) {
-    const isFull = true
-
     const ruleType = {
         'per_jam': 'Per Jam',
         'flat': 'Flat'
@@ -63,28 +65,48 @@ function TarifCard({ tarif }: { tarif: TarifType}) {
             <div className="flex items-start justify-between">
                 <div className="space-y-1">
                     <h3 className="text-lg font-semibold text-card-foreground">
-                        Masyarakat
+                        {tarif.jenis_kendaraan.toString().charAt(0).toUpperCase() + tarif.jenis_kendaraan.toString().slice(1)}
                     </h3>
 
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPinIcon className="h-4 w-4" />
-                        <span>timurnya sungai</span>
+                    <div className="flex items-center gap-2">
+                        <Badge variant={tarif.is_active ? 'default' : 'secondary'}>
+                            {tarif.is_active ? 'Aktif' : 'Non-aktif'}
+                        </Badge>
                     </div>
                 </div>
 
-                <div className="rounded-lg bg-primary/10 p-3 text-primary">
-                    <ParkingSquareIcon className="h-6 w-6" />
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 transition-opacity group-hover:opacity-100"
+                        >
+                            <EllipsisVertical className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuGroup>
+                            <EditModal tarif={tarif} />
+                            <ConfirmDelete
+                                deleteUrl={tarifParkir.destroy(tarif.id).url}
+                            >
+                                <DropdownMenuItem
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="text-destructive focus:text-destructive"
+                                >
+                                    <Trash className="h-4 w-4 mr-2" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </ConfirmDelete>
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <div className="my-4 h-px bg-border" />
 
             <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Jenis Kendaraan</span>
-                    <span className="font-medium">{tarif.jenis_kendaraan.toString().charAt(0).toUpperCase() + tarif.jenis_kendaraan.toString().slice(1)}</span>
-                </div>
-
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Tipe Harga</span>
                     <span className="font-medium">{ruleType[tarif.rule_type]}</span>
