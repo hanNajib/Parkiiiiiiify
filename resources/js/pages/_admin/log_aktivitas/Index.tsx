@@ -35,14 +35,16 @@ export default function Index({ logAktivitas, stats, filter }: Props) {
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const isFirstRender = useRef(true)
   
+  // Auto-sync filters: whenever filter state changes, apply filter
   useEffect(() => {
+    // Skip first render to avoid duplicate request on mount
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
     }
-    
-    applyFilter({ s: debouncedSearchTerm })
-  }, [debouncedSearchTerm])
+    // Apply filter whenever debounced search or other filters change
+    applyFilter()
+  }, [debouncedSearchTerm, roleFilter, actionFilter])
   
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -57,14 +59,13 @@ export default function Index({ logAktivitas, stats, filter }: Props) {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
   }
   
-  const applyFilter = (extra = {}) => {
+  const applyFilter = () => {
     router.get(
         logAktivitasRoute.index().url,
         {
-            s: searchTerm,
+            s: debouncedSearchTerm,
             role: roleFilter !== 'all' ? roleFilter : undefined,
             action: actionFilter !== 'all' ? actionFilter : undefined,
-            ...extra
         },
     )
   }
@@ -130,7 +131,7 @@ export default function Index({ logAktivitas, stats, filter }: Props) {
             <div className="flex gap-2">
               <Select value={roleFilter} onValueChange={(value) => {
                 setRoleFilter(value)
-                applyFilter({ role: value })
+                // applyFilter triggered automatically via useEffect
               }}>
                 <SelectTrigger className='w-full max-w-48'>
                   <SelectValue placeholder="Filter Role" />
@@ -147,7 +148,7 @@ export default function Index({ logAktivitas, stats, filter }: Props) {
 
               <Select value={actionFilter} onValueChange={(value) => {
                 setActionFilter(value)
-                applyFilter({ action: value })
+                // applyFilter triggered automatically via useEffect
               }}>
                 <SelectTrigger className='w-full max-w-48'>
                   <SelectValue placeholder="Filter Aksi" />

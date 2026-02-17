@@ -6,7 +6,7 @@ import { Scan, X } from 'lucide-react'
 import { Alert, AlertDescription } from './ui/alert'
 
 interface BarcodeScannerProps {
-  onScanComplete: (code: string) => void
+  onScanComplete: (code: string) => void | Promise<void>
   placeholder?: string
   title?: string
   description?: string
@@ -21,6 +21,7 @@ export default function BarcodeScanner({
   const [open, setOpen] = useState(false)
   const [scannedCode, setScannedCode] = useState('')
   const [error, setError] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
 
   // Handle barcode scanner input (scanners act like keyboards)
   useEffect(() => {
@@ -42,23 +43,23 @@ export default function BarcodeScanner({
           buffer = ''
         }
       } else if (e.key.length === 1) {
-        // Only capture single character keys
         buffer += e.key
         timeout = setTimeout(() => {
           buffer = ''
-        }, 100)
+        }, 300)
       }
     }
 
-    window.addEventListener('keypress', handleKeyPress)
+    window.addEventListener('keydown', handleKeyPress)
     return () => {
-      window.removeEventListener('keypress', handleKeyPress)
+      window.removeEventListener('keydown', handleKeyPress)
       clearTimeout(timeout)
     }
   }, [open])
 
-  const handleSubmit = (code?: string) => {
+  const handleSubmit = async (code?: string) => {
     const codeToSubmit = code || scannedCode
+    if (isProcessing) return
     if (!codeToSubmit) {
       setError('Kode barcode tidak boleh kosong')
       return
@@ -72,9 +73,14 @@ export default function BarcodeScanner({
     }
 
     setError('')
-    onScanComplete(cleanCode)
-    setOpen(false)
-    setScannedCode('')
+    setIsProcessing(true)
+    try {
+      await onScanComplete(cleanCode)
+      setOpen(false)
+      setScannedCode('')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -119,6 +125,7 @@ export default function BarcodeScanner({
                   placeholder={placeholder}
                   className="pr-10"
                   autoFocus
+                  disabled={isProcessing}
                 />
                 {scannedCode && (
                   <button
@@ -128,6 +135,7 @@ export default function BarcodeScanner({
                       setError('')
                     }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    disabled={isProcessing}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -151,10 +159,11 @@ export default function BarcodeScanner({
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                disabled={isProcessing}
               >
                 Batal
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isProcessing}>
                 Proses
               </Button>
             </div>

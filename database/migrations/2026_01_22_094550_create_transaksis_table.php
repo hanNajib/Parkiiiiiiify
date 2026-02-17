@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('status', ['ongoing', 'completed'])->default('ongoing');
             $table->foreignId('petugas_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('area_parkir_id')->constrained('area_parkir')->cascadeOnDelete();
+            $table->string('token');
             $table->timestamps();
         });
     }

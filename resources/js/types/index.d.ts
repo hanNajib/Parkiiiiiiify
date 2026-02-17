@@ -131,6 +131,7 @@ export interface Transaksi {
     status: 'ongoing' | 'completed';
     petugas_id: number;
     area_parkir_id: number;
+    kode_transaksi: string;
     created_at: string;
     updated_at: string;
     kendaraan?: Kendaraan;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AreaParkir;
+use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,8 +19,8 @@ class AreaParkirController extends Controller
         $stats = [
             'total_area_parkir' => AreaParkir::count(),
             'total_kapasitas' => AreaParkir::sum('kapasitas'),
-            'total_terisi' => AreaParkir::sum('terisi'),
-            'total_kosong' => AreaParkir::sum('kapasitas') - AreaParkir::sum('terisi'),
+            'total_terisi' => Transaksi::where('status', 'ongoing')->count(),
+            'total_kosong' => AreaParkir::sum('kapasitas') - Transaksi::where('status', 'ongoing')->count(),
         ];
 
         return Inertia::render('_admin/area_parkir/Index', [

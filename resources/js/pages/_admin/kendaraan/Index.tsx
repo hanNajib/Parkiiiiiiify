@@ -39,21 +39,23 @@ export default function Index({ kendaraan, stats, filter }: Props) {
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const isFirstRender = useRef(true)
   
+  // Auto-sync filters: whenever filter state changes, apply filter
   useEffect(() => {
+    // Skip first render to avoid duplicate request on mount
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
     }
-    applyFilter({ s: debouncedSearchTerm })
-  }, [debouncedSearchTerm])
+    // Apply filter whenever debounced search or other filters change
+    applyFilter()
+  }, [debouncedSearchTerm, jenisKendaraanFilter])
   
-  const applyFilter = (extra = {}) => {
+  const applyFilter = () => {
     router.get(
         kendaraanRoute.index().url,
         {
-            s: searchTerm,
+            s: debouncedSearchTerm,
             jenis_kendaraan: jenisKendaraanFilter !== 'all' ? jenisKendaraanFilter : undefined,
-            ...extra
         },
     )
   }
@@ -81,7 +83,7 @@ export default function Index({ kendaraan, stats, filter }: Props) {
             <div className="flex gap-2">
               <Select value={jenisKendaraanFilter} onValueChange={(value) => {
                 setJenisKendaraanFilter(value)
-                applyFilter({ jenis_kendaraan: value })
+                // applyFilter triggered automatically via useEffect
               }}>
                 <SelectTrigger className='w-full max-w-48'>
                   <SelectValue placeholder="Pilih jenis kendaraan" />
