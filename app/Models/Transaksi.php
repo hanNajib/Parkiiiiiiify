@@ -33,8 +33,8 @@ class Transaksi extends Model
     }
 
     public function scopeDateRange($query) {
-        $dateFrom = request()->query('date_from');
-        $dateTo = request()->query('date_to');
+        $dateFrom = request()->query('date_from', Carbon::now()->toDateString());
+        $dateTo = request()->query('date_to', Carbon::now()->toDateString());
 
         if ($dateFrom) {
             $query->whereDate('waktu_masuk', '>=', $dateFrom);

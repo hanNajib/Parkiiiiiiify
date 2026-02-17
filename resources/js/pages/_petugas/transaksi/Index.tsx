@@ -142,7 +142,6 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
       toast.error(`Transaksi #${transactionId} tidak ditemukan di area ini`)
       return
     }
-    console.log('Found transaction:', foundTransaction)
 
     if (foundTransaction.status !== 'ongoing') {
       toast.error('Transaksi ini sudah selesai')

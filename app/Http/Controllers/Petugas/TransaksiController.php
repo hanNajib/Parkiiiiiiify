@@ -9,22 +9,25 @@ use App\Models\Tarif;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use SebastianBergmann\Environment\Console;
 
 class TransaksiController extends Controller
 {
-    public function selectArea() {
+    public function selectArea()
+    {
         $areaParkir = AreaParkir::where('is_active', true)->get();
         return Inertia::render('_petugas/transaksi/SelectArea', [
             'areaParkir' => $areaParkir
         ]);
     }
 
-    public function index(Request $request, $areaParkirId) {
+    public function index(Request $request, $areaParkirId)
+    {
         $areaParkir = AreaParkir::findOrFail($areaParkirId);
-        
+
         $data = Transaksi::with(['kendaraan', 'tarif', 'petugas', 'areaParkir'])
             ->where('area_parkir_id', $areaParkirId)
             ->self()
@@ -34,7 +37,7 @@ class TransaksiController extends Controller
             ->latest()
             ->paginate(10)
             ->withQueryString();
-        
+
         $stats = [
             'total_transaksi' => Transaksi::self()->where('area_parkir_id', $areaParkirId)->count(),
             'total_ongoing' => Transaksi::self()->where('area_parkir_id', $areaParkirId)->where('status', 'ongoing')->count(),
@@ -45,18 +48,18 @@ class TransaksiController extends Controller
         $kendaraanParked = Transaksi::where('status', 'ongoing')
             ->pluck('kendaraan_id')
             ->toArray();
-        
+
         $kendaraanList = Kendaraan::select('id', 'plat_nomor', 'jenis_kendaraan', 'pemilik', 'warna')
             ->whereNotIn('id', $kendaraanParked)
             ->get();
-        
+
         $tarifList = Tarif::where('area_parkir_id', $areaParkirId)
             ->where('is_active', true)
             ->get();
 
         return Inertia::render('_petugas/transaksi/Index', [
             'transaksi' => $data,
-            'stats' => $stats,  
+            'stats' => $stats,
             'areaParkir' => $areaParkir,
             'kendaraanList' => $kendaraanList,
             'tarifList' => $tarifList,
@@ -69,7 +72,8 @@ class TransaksiController extends Controller
         ]);
     }
 
-    public function store(Request $request, $areaParkirId) {
+    public function store(Request $request, $areaParkirId)
+    {
         $validated = $request->validate([
             'kendaraan_id' => 'required|exists:kendaraan,id',
             'tarif_id' => 'required|exists:tarif,id',
@@ -99,69 +103,78 @@ class TransaksiController extends Controller
         ]);
     }
 
-    public function update(Request $request, $areaParkirId, $id) {
-        $transaksi = Transaksi::where('area_parkir_id', $areaParkirId)->findOrFail($id);
-        
-        if ($transaksi->status === 'completed') {
-            return redirect()->back()->with('error', 'Transaksi sudah selesai');
-        }
+    public function update(Request $request, $areaParkirId, $id)
+    {
+        return DB::transaction(function () use ($areaParkirId, $id) {
+            $transaksi = Transaksi::where('area_parkir_id', $areaParkirId)
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        $transaksi->waktu_keluar = now();
-        $transaksi->status = 'completed';
-        
-        $waktuMasuk = \Carbon\Carbon::parse($transaksi->waktu_masuk);
-        $waktuKeluar = \Carbon\Carbon::parse($transaksi->waktu_keluar);
-        $durasi = $waktuMasuk->diffInMinutes($waktuKeluar);
-        $transaksi->durasi = $durasi;
-        
-        $tarif = Tarif::find($transaksi->tarif_id);
-        if ($tarif->rule_type === 'flat') {
-            $transaksi->total_biaya = $tarif->price;
-        } else {
-            $hours = ceil($durasi / 60);
-            $transaksi->total_biaya = $tarif->price * $hours;
-        }
-        
-        $transaksi->save();
+            if ($transaksi->status === 'completed') {
+                return redirect()->back()->with('error', 'Transaksi sudah selesai');
+            }
 
-        return redirect()->back()->with([
-            'success' => 'Transaksi berhasil diselesaikan',
-            'print_struk_keluar' => $transaksi->id,
-        ]);
+            $transaksi->waktu_keluar = now();
+            $transaksi->status = 'completed';
+
+            $waktuMasuk = \Carbon\Carbon::parse($transaksi->waktu_masuk);
+            $waktuKeluar = \Carbon\Carbon::parse($transaksi->waktu_keluar);
+            $durasi = $waktuMasuk->diffInMinutes($waktuKeluar);
+            $transaksi->durasi = $durasi;
+
+            $tarif = Tarif::find($transaksi->tarif_id);
+            if ($tarif->rule_type === 'flat') {
+                $transaksi->total_biaya = $tarif->price;
+            } else {
+                $hours = ceil($durasi / 60);
+                $transaksi->total_biaya = $tarif->price * $hours;
+            }
+
+            $transaksi->save();
+
+            return redirect()->back()->with([
+                'success' => 'Transaksi berhasil diselesaikan',
+                'print_struk_keluar' => $transaksi->id,
+            ]);
+        });
     }
 
-    public function destroy($areaParkirId, $id) {
+    public function destroy($areaParkirId, $id)
+    {
         $transaksi = Transaksi::where('area_parkir_id', $areaParkirId)->findOrFail($id);
         $transaksi->delete();
-        
+
         return redirect()->back()->with('success', 'Transaksi berhasil dihapus');
     }
 
-    public function cetakStrukMasuk($areaParkirId, $id) {
+    public function cetakStrukMasuk($areaParkirId, $id)
+    {
         $transaksi = Transaksi::with(['kendaraan', 'tarif', 'petugas', 'areaParkir'])
             ->where('area_parkir_id', $areaParkirId)
             ->findOrFail($id);
-        
+
         return Inertia::render('_petugas/transaksi/StrukMasuk', [
             'transaksi' => $transaksi
         ]);
     }
 
-    public function cetakStrukKeluar($areaParkirId, $id) {
+    public function cetakStrukKeluar($areaParkirId, $id)
+    {
         $transaksi = Transaksi::with(['kendaraan', 'tarif', 'petugas', 'areaParkir'])
             ->where('area_parkir_id', $areaParkirId)
             ->findOrFail($id);
-        
+
         if ($transaksi->status !== 'completed') {
             return redirect()->back()->with('error', 'Transaksi belum selesai');
         }
-        
+
         return Inertia::render('_petugas/transaksi/StrukKeluar', [
             'transaksi' => $transaksi
         ]);
     }
 
-    public function lookupByBarcode($areaParkirId, string $code) {
+    public function lookupByBarcode($areaParkirId, string $code)
+    {
         Log::info("Lookup transaksi by barcode: $code");
 
         $match = [];
