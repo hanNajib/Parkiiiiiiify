@@ -76,6 +76,7 @@ export interface AreaParkir {
     lokasi: string;
     kapasitas: number;
     terisi: number;
+    default_rule_type: 'choose' | 'flat' | 'interval' | 'progressive';
     is_active: boolean;
     created_at: string;
     updated_at: string;

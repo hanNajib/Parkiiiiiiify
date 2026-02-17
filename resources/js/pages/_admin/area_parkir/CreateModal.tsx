@@ -15,6 +15,7 @@ export default function CreateModal() {
         nama: '',
         lokasi: '',
         kapasitas: 0,
+        default_rule_type: 'choose',
         is_active: '1',
     });
 
@@ -94,6 +95,31 @@ export default function CreateModal() {
                             />
                             {errors.kapasitas && (
                                 <p className="text-sm text-destructive mt-1">{errors.kapasitas}</p>
+                            )}
+                        </Field>
+
+                        <Field>
+                            <Label htmlFor="default_rule_type">Aturan Tarif Utama</Label>
+                            <Select
+                                name="default_rule_type"
+                                value={data.default_rule_type}
+                                onValueChange={(value) => setData('default_rule_type', value)}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih aturan tarif" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="choose">Pilih Saat Transaksi</SelectItem>
+                                    <SelectItem value="flat">Flat (sekali bayar)</SelectItem>
+                                    <SelectItem value="interval">Interval (per blok waktu)</SelectItem>
+                                    <SelectItem value="progressive">Progresif (bertahap per jam)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Menentukan aturan tarif default saat membuat transaksi baru.
+                            </p>
+                            {errors.default_rule_type && (
+                                <p className="text-sm text-destructive mt-1">{errors.default_rule_type}</p>
                             )}
                         </Field>
                     </div>

@@ -131,13 +131,18 @@ export default function Edit({ areaParkir, tarif }: { areaParkir: AreaParkir; ta
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
-                                        <SelectItem value="flat">Flat</SelectItem>
-                                        <SelectItem value="interval">Per Interval</SelectItem>
-                                        <SelectItem value="progressive">Progressive</SelectItem>
+                                        <SelectItem value="flat">Flat (sekali bayar)</SelectItem>
+                                        <SelectItem value="interval">Interval (per blok waktu)</SelectItem>
+                                        <SelectItem value="progressive">Progresif (bertahap per jam)</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
-                            <p className="text-xs text-muted-foreground mt-1">Tipe harga tidak dapat diubah</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Tipe harga tidak dapat diubah.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Flat: sekali bayar, Interval: per blok waktu, Progresif: bertahap per jam.
+                            </p>
                         </Field>
 
                         <Field>

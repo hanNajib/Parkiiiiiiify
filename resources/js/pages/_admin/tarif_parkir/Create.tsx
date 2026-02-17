@@ -117,12 +117,15 @@ export default function Create({ areaParkir, existingTarif }: { areaParkir: Area
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
-                                        <SelectItem value="flat">Flat</SelectItem>
-                                        <SelectItem value="interval">Per Interval</SelectItem>
-                                        <SelectItem value="progressive">Progressive</SelectItem>
+                                        <SelectItem value="flat">Flat (sekali bayar)</SelectItem>
+                                        <SelectItem value="interval">Interval (per blok waktu)</SelectItem>
+                                        <SelectItem value="progressive">Progresif (bertahap per jam)</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Pilih jenis aturan tarif untuk area parkir ini.
+                            </p>
                             {errors.rule_type && <p className="text-sm text-destructive mt-1">{errors.rule_type}</p>}
                         </Field>
 
