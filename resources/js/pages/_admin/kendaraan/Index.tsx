@@ -153,7 +153,7 @@ export default function Index({ kendaraan, stats, filter }: Props) {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/10 text-primary">
                             {kendaraan.plat_nomor.charAt(0)}
                           </div>
                           <div>
