@@ -73,15 +73,34 @@ export default function Edit({ areaParkir, tarif }: { areaParkir: AreaParkir; ta
             jam_ke: index + 1,
         }));
 
-        setData("progressive_rules", normalizedRules.length > 0 ? normalizedRules : null);
-
-        if (normalizedRules.length > 0) {
-            const firstHarga = normalizedRules[0]?.harga ?? 0;
-            if (data.harga_awal !== firstHarga) {
-                setData("harga_awal", firstHarga);
+        setData((prev) => {
+            const newData: any = {};
+            
+            if (normalizedRules.length > 0) {
+                // Convert to JSON string for backend
+                const rulesJsonString = JSON.stringify(normalizedRules);
+                const prevRulesJsonString = typeof prev.progressive_rules === 'string' 
+                    ? prev.progressive_rules 
+                    : JSON.stringify(prev.progressive_rules);
+                
+                if (rulesJsonString !== prevRulesJsonString) {
+                    newData.progressive_rules = rulesJsonString;
+                }
+                
+                const firstHarga = normalizedRules[0]?.harga ?? 0;
+                if (prev.harga_awal !== firstHarga) {
+                    newData.harga_awal = firstHarga;
+                }
+            } else {
+                if (prev.progressive_rules !== null) {
+                    newData.progressive_rules = null;
+                }
             }
-        }
-    }, [tarif.rule_type, progressiveRules, data.progressive_rules, data.harga_awal, setData]);
+            
+            // Only update if there are changes
+            return Object.keys(newData).length > 0 ? { ...prev, ...newData } : prev;
+        });
+    }, [tarif.rule_type, progressiveRules]);
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();

@@ -12,4 +12,10 @@ class Tarif extends Model
     
     protected $table = 'tarif';
     protected $guarded = [];
+
+    protected $casts = [
+        'progressive_rules' => 'array',
+        'berlaku_dari' => 'date',
+        'berlaku_sampai' => 'date',
+    ];
 }

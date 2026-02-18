@@ -196,23 +196,21 @@ class Transaksi extends Model
                 }
 
                 $rules = $rules->sortBy('jam_ke');
+                $total = 0;
 
-                $matched = $rules
-                    ->where('jam_ke', '<=', $durasiJam)
-                    ->last();
+                // Hitung untuk setiap jam
+                for ($jam = 1; $jam <= $durasiJam; $jam++) {
+                    // Cari aturan yang sesuai untuk jam ini
+                    $rule = $rules
+                        ->where('jam_ke', '<=', $jam)
+                        ->sortByDesc('jam_ke')
+                        ->first();
 
-                if ($matched) {
-
-                    $total = $matched['harga'];
-
-                    $maxJam = $rules->max('jam_ke');
-
-                    if ($durasiJam > $maxJam && $tarif->harga_lanjutan) {
-                        $extraJam = $durasiJam - $maxJam;
-                        $total += $extraJam * $tarif->harga_lanjutan;
+                    if ($rule) {
+                        $total += $rule['harga'];
+                    } else {
+                        $total += $tarif->harga_awal ?? 0;
                     }
-                } else {
-                    $total = $tarif->harga_awal ?? 0;
                 }
 
                 break;

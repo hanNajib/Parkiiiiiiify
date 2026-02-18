@@ -3,7 +3,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogHeader, 
 import { Label } from "@/components/ui/label";
 import { IconPlus, IconLoader2 } from "@tabler/icons-react";
 import { useForm } from "@inertiajs/react";
-import { FormEventHandler, useState, useMemo } from "react";
+import { FormEventHandler, useState, useMemo, useEffect } from "react";
 import transaksiRoute from "@/routes/transaksi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Kendaraan, AreaParkir } from "@/types";
@@ -29,7 +29,10 @@ export default function CreateModal({ areaParkir, kendaraanList: initialKendaraa
         kendaraan_id: '',
     });
 
-    // Filter kendaraan based on search - client side filtering
+    useEffect(() => {
+        setKendaraanList(initialKendaraanList);
+    }, [initialKendaraanList]);
+
     const filteredKendaraan = useMemo(() => {
         if (searchKendaraan.length < 2) return [];
         const search = searchKendaraan.toLowerCase();
