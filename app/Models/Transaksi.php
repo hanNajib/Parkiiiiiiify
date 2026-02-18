@@ -74,6 +74,60 @@ class Transaksi extends Model
         return 'TRX' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Find the most suitable tariff for a vehicle in a parking area
+     * 
+     * @param int $areaParkirId
+     * @param string $jenisKendaraan
+     * @return Tarif|null
+     */
+    public static function findBestTarif(int $areaParkirId, string $jenisKendaraan): ?Tarif
+    {
+        $areaParkir = AreaParkir::find($areaParkirId);
+        if (!$areaParkir) {
+            return null;
+        }
+
+        $now = now();
+        
+        // Build query for matching tariffs
+        $query = Tarif::where('area_parkir_id', $areaParkirId)
+            ->where('jenis_kendaraan', $jenisKendaraan)
+            ->where('is_active', true);
+        
+        // Filter by default_rule_type if not 'choose'
+        if ($areaParkir->default_rule_type !== 'choose') {
+            $query->where('rule_type', $areaParkir->default_rule_type);
+        }
+        
+        // Filter by validity period (berlaku_dari and berlaku_sampai)
+        $query->where(function($q) use ($now) {
+            $q->where(function($subQ) use ($now) {
+                // Case 1: Both dates are set and current date is within range
+                $subQ->whereNotNull('berlaku_dari')
+                    ->whereNotNull('berlaku_sampai')
+                    ->whereDate('berlaku_dari', '<=', $now)
+                    ->whereDate('berlaku_sampai', '>=', $now);
+            })
+            ->orWhere(function($subQ) use ($now) {
+                // Case 2: Only berlaku_dari is set
+                $subQ->whereNotNull('berlaku_dari')
+                    ->whereNull('berlaku_sampai')
+                    ->whereDate('berlaku_dari', '<=', $now);
+            })
+            ->orWhere(function($subQ) {
+                // Case 3: Both are null (no date restriction)
+                $subQ->whereNull('berlaku_dari')
+                    ->whereNull('berlaku_sampai');
+            });
+        });
+        
+        // Order by: newest tariff first
+        $query->orderBy('created_at', 'DESC');
+        
+        return $query->first();
+    }
+
     public function selesaikan(): void
     {
         if ($this->status === 'completed') {

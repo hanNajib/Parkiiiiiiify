@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { IconSearch } from '@tabler/icons-react'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Transaksi, PaginatedData, AreaParkir, Kendaraan, Tarif, PageProps } from '@/types'
+import { Transaksi, PaginatedData, AreaParkir, Kendaraan, PageProps } from '@/types'
 import DashboardHeader from '@/components/dashboard-header'
 import StatCard from '@/components/StatCard'
 import { Trash, Clock, DollarSign, CheckCircle, Receipt, ArrowLeft, Calendar } from 'lucide-react'
@@ -28,7 +28,6 @@ interface Props {
   }
   areaParkir: AreaParkir
   kendaraanList: Kendaraan[]
-  tarifList: Tarif[]
   filter: {
     s?: string,
     status?: string,
@@ -37,7 +36,7 @@ interface Props {
   }
 }
 
-export default function Index({ transaksi, stats, areaParkir, kendaraanList, tarifList, filter }: Props) {
+export default function Index({ transaksi, stats, areaParkir, kendaraanList, filter }: Props) {
   const today = new Date().toISOString().split('T')[0]
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [statusFilter, setStatusFilter] = useState<string>(filter.status || 'all')
@@ -74,11 +73,13 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
     if (flash?.print_struk_masuk) {
       const url = transaksiRoute.cetakStrukMasuk({ areaParkir: areaParkir.id, transaksi: flash.print_struk_masuk }).url
       window.open(url, '_blank')
+      toast.success('Struk masuk berhasil dicetak! Periksa tab baru.')
     }
     
     if (flash?.print_struk_keluar) {
       const url = transaksiRoute.cetakStrukKeluar({ areaParkir: areaParkir.id, transaksi: flash.print_struk_keluar }).url
       window.open(url, '_blank')
+      toast.success('Checkout berhasil! Struk keluar sedang dicetak...')
     }
   }, [props.flash])
   
@@ -97,8 +98,12 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
 
   const handleCheckout = (id: number) => {
     router.put(transaksiRoute.update({ areaParkir: areaParkir.id, transaksi: id }).url, {}, {
+      preserveScroll: true,
       onSuccess: () => {
-        
+        toast.info('Memproses checkout...')
+      },
+      onError: (errors) => {
+        toast.error(errors[Object.keys(errors)[0]] || 'Checkout gagal')
       }
     })
   }
@@ -172,7 +177,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, tar
               title="Scan Barcode untuk Checkout"
               description="Scan barcode dari struk masuk untuk checkout kendaraan"
             />
-            <CreateModal areaParkirId={areaParkir.id} kendaraanList={kendaraanList} tarifList={tarifList} />
+            <CreateModal areaParkir={areaParkir} kendaraanList={kendaraanList} />
           </div>
         </DashboardHeader>
 

@@ -5,14 +5,12 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\AreaParkir;
 use App\Models\Kendaraan;
-use App\Models\Tarif;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use SebastianBergmann\Environment\Console;
 
 class TransaksiController extends Controller
 {
@@ -53,16 +51,11 @@ class TransaksiController extends Controller
             ->whereNotIn('id', $kendaraanParked)
             ->get();
 
-        $tarifList = Tarif::where('area_parkir_id', $areaParkirId)
-            ->where('is_active', true)
-            ->get();
-
         return Inertia::render('_petugas/transaksi/Index', [
             'transaksi' => $data,
             'stats' => $stats,
             'areaParkir' => $areaParkir,
             'kendaraanList' => $kendaraanList,
-            'tarifList' => $tarifList,
             'filter' => [
                 's' => $request->s,
                 'status' => $request->status,
@@ -76,17 +69,12 @@ class TransaksiController extends Controller
     {
         $validated = $request->validate([
             'kendaraan_id' => 'required|exists:kendaraan,id',
-            'tarif_id' => 'required|exists:tarif,id',
         ]);
 
-        $tarif = Tarif::findOrFail($validated['tarif_id']);
-        if ($tarif->area_parkir_id != $areaParkirId) {
-            return redirect()->back()->with('error', 'Tarif tidak valid untuk area parkir ini.');
-        }
-        if (!$tarif->is_active) {
-            return redirect()->back()->with('error', 'Tarif tidak aktif.');
-        }
+        $areaParkir = AreaParkir::findOrFail($areaParkirId);
+        $kendaraan = Kendaraan::findOrFail($validated['kendaraan_id']);
 
+        // Check for existing ongoing transaction
         $existingTransaction = Transaksi::where('kendaraan_id', $validated['kendaraan_id'])
             ->where('status', 'ongoing')
             ->first();
@@ -95,9 +83,23 @@ class TransaksiController extends Controller
             return redirect()->back()->with('error', 'Kendaraan ini sedang parkir. Tidak bisa melakukan transaksi ganda.');
         }
 
+        // Auto-select the best matching tariff
+        $tarif = Transaksi::findBestTarif($areaParkirId, $kendaraan->jenis_kendaraan);
+        
+        if (!$tarif) {
+            $ruleTypeMsg = $areaParkir->default_rule_type !== 'choose' 
+                ? " dengan tipe '{$areaParkir->default_rule_type}'" 
+                : '';
+            
+            return redirect()->back()->with('error', 
+                "Tidak ada tarif aktif yang tersedia untuk kendaraan {$kendaraan->jenis_kendaraan}{$ruleTypeMsg} di area ini. " .
+                "Silakan hubungi admin untuk menambahkan tarif yang sesuai."
+            );
+        }
+
         $transaksi = Transaksi::create([
             'kendaraan_id' => $validated['kendaraan_id'],
-            'tarif_id' => $validated['tarif_id'],
+            'tarif_id' => $tarif->id,
             'area_parkir_id' => $areaParkirId,
             'petugas_id' => Auth::id(),
             'waktu_masuk' => now(),

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\TarifParkirController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Petugas\KendaraanController as PetugasKendaraanController;
 use App\Http\Controllers\Petugas\TransaksiController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -42,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('role:petugas')->prefix('petugas')->group(function () {
+        Route::post('/kendaraan', [PetugasKendaraanController::class, 'store'])->name('petugas.kendaraan.store');
         Route::get('/transaksi/select-area', [TransaksiController::class, 'selectArea'])->name('transaksi.select-area');
         Route::prefix('transaksi/area/{areaParkir}')->name('transaksi.')->group(function () {
             Route::get('/', [TransaksiController::class, 'index'])->name('index');

@@ -7,7 +7,12 @@ interface Props {
 
 export default function StrukKeluar({ transaksi }: Props) {
   useEffect(() => {
-    window.print()
+    // Delay to ensure content is fully rendered before printing
+    const timer = setTimeout(() => {
+      window.print()
+    }, 500)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   const formatCurrency = (amount: number | null) => {
@@ -108,11 +113,15 @@ export default function StrukKeluar({ transaksi }: Props) {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm font-medium">Jenis Tarif:</span>
-              <span className="text-sm">{transaksi.tarif?.rule_type === 'flat' ? 'Tarif Flat' : 'Per Jam'}</span>
+              <span className="text-sm">
+                {transaksi.tarif?.rule_type === 'flat' && 'Tarif Flat'}
+                {transaksi.tarif?.rule_type === 'interval' && 'Tarif Per Interval'}
+                {transaksi.tarif?.rule_type === 'progressive' && 'Tarif Progresif'}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm font-medium">Harga Satuan:</span>
-              <span className="text-sm">{formatCurrency((transaksi.tarif?.price as number) || 0)}</span>
+              <span className="text-sm font-medium">Harga Awal:</span>
+              <span className="text-sm">{formatCurrency(transaksi.tarif?.harga_awal || 0)}</span>
             </div>
             {transaksi.tarif?.rule_type === 'interval' && (
               <div className="flex justify-between">
@@ -141,6 +150,22 @@ export default function StrukKeluar({ transaksi }: Props) {
           <p className="text-xs text-center text-gray-400">
             Sampai jumpa kembali!
           </p>
+        </div>
+
+        {/* Print Again Button (hidden when printing) */}
+        <div className="print:hidden mt-6 flex justify-center gap-2">
+          <button 
+            onClick={() => window.print()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            🖨️ Cetak Ulang
+          </button>
+          <button 
+            onClick={() => window.close()} 
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+          >
+            Tutup
+          </button>
         </div>
       </div>
 
