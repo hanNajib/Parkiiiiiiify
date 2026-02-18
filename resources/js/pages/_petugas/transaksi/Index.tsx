@@ -40,30 +40,26 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, fil
   const today = new Date().toISOString().split('T')[0]
   const [searchTerm, setSearchTerm] = useState(filter.s || '')
   const [statusFilter, setStatusFilter] = useState<string>(filter.status || 'all')
-  const [dateFrom, setDateFrom] = useState(filter.date_from || today)
-  const [dateTo, setDateTo] = useState(filter.date_to || today)
-  const [showDateFilter, setShowDateFilter] = useState(false)
+  const [dateFrom, setDateFrom] = useState(filter.date_from || '')
+  const [dateTo, setDateTo] = useState(filter.date_to || '')
+  const [showDateFilter, setShowDateFilter] = useState(filter.date_from ? true : false)
   const { props } = usePage<PageProps>()
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const isFirstRender = useRef(true)
   
-  // Auto-sync filters: whenever filter state changes, apply filter
   useEffect(() => {
-    // Skip first render to avoid duplicate request on mount
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
     }
-    // Apply filter whenever debounced search or other filters change
     applyFilter()
   }, [debouncedSearchTerm, statusFilter, dateFrom, dateTo])
   
-  // Initialize date range on first mount if not filtered
   useEffect(() => {
-    if (showDateFilter && !filter.date_from && !filter.date_to) {
-      if (!dateFrom) setDateFrom(today)
-      if (!dateTo) setDateTo(today)
+    if (showDateFilter && !dateFrom && !dateTo) {
+      setDateFrom(today)
+      setDateTo(today)
     }
   }, [showDateFilter])
 
@@ -89,8 +85,8 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, fil
         {
             s: debouncedSearchTerm,  // Use debounced value to prevent spam
             status: statusFilter !== 'all' ? statusFilter : undefined,
-            date_from: dateFrom || undefined,
-            date_to: dateTo || undefined,
+            date_from: dateFrom ? dateFrom : undefined,
+            date_to: dateTo ? dateTo : undefined,
             page: options?.page,
         },
     )

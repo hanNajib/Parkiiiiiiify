@@ -1,16 +1,13 @@
 import { DashboardLayout } from "@/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Users, Car, Building2, Clock, Activity, BarChart3, Download, FileText } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { FormEventHandler, useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 import { router, usePage } from "@inertiajs/react";
 import { toast } from "sonner";
+import RekapTransaksiExport from "@/components/RekapTransaksiExport";
 
 interface DashboardProps {
     userRole: 'superadmin' | 'admin' | 'petugas' | 'owner';
@@ -66,7 +63,7 @@ function AdminDashboard({
     const revenueChartConfig = {
         revenue: {
             label: "Pendapatan",
-            color: "hsl(var(--chart-1))",
+            color: "#60a5fa",
         },
     } satisfies ChartConfig;
 
@@ -129,7 +126,7 @@ function AdminDashboard({
                         <CardDescription>Tren pendapatan harian</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ChartContainer config={revenueChartConfig} className="h-[300px] w-full">
+                        <ChartContainer config={revenueChartConfig} className="h-75 w-full">
                             <AreaChart data={revenueChart}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis 
@@ -283,8 +280,8 @@ function PetugasDashboard({
                         </CardHeader>
                         <CardContent>
                             <ChartContainer config={{
-                                transactions: { label: "Transaksi", color: "hsl(var(--chart-2))" }
-                            }} className="h-[200px] w-full">
+                                transactions: { label: "Transaksi", color: "#34d399" }
+                            }} className="h-50 w-full">
                                 <BarChart data={hourlyActivity}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="hour" tickLine={false} axisLine={false} />
@@ -368,23 +365,25 @@ function PetugasDashboard({
 function OwnerDashboard({ 
     revenueData,
     thisMonthRevenue,
-    lastMonthRevenue,
+    todayRevenue,
     growthRate,
-    areaProfitability,
+    areaRevenueChart,
+    avgOccupancy,
     vehicleDistribution,
     peakHours,
     totalRevenue,
     totalTransactions,
+    completedTransactions,
     avgRevPerTransaction,
+    petugasPerformance,
+    topArea,
+    topPetugas,
+    topVehicleType,
+    busiestHour,
     areaList,
     formatCurrency,
     formatDate
 }: any) {
-    const [startDate, setStartDate] = useState(new Date(new Date().setDate(1)).toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
-    const [selectedArea, setSelectedArea] = useState('all');
-    const [isDownloading, setIsDownloading] = useState(false);
-    const formRef = useRef<HTMLFormElement>(null);
     const { props } = usePage();
 
     useEffect(() => {
@@ -397,40 +396,36 @@ function OwnerDashboard({
         }
     }, [(props as any).flash]);
 
-    const handleDownloadRekap: FormEventHandler = (e) => {
-        e.preventDefault();
-        
-        if (!startDate || !endDate) {
-            toast.error('Harap pilih tanggal mulai dan selesai');
-            return;
-        }
-
-        if (new Date(startDate) > new Date(endDate)) {
-            toast.error('Tanggal mulai tidak boleh lebih besar dari tanggal selesai');
-            return;
-        }
-
-        setIsDownloading(true);
-        
-        if (formRef.current) {
-            formRef.current.submit();
-        }
-        
-        setTimeout(() => {
-            setIsDownloading(false);
-        }, 2000);
-    };
-
     const revenueChartConfig = {
         revenue: {
             label: "Pendapatan",
-            color: "hsl(var(--chart-1))",
+            color: "#38bdf8",
         },
         transactions: {
             label: "Transaksi",
-            color: "hsl(var(--chart-2))",
+            color: "#f9a8d4",
         },
     } satisfies ChartConfig;
+
+    const areaRevenueChartConfig = {
+        revenue: {
+            label: "Pendapatan",
+            color: "#a78bfa",
+        },
+    } satisfies ChartConfig;
+
+    const petugasChartConfig = {
+        revenue: {
+            label: "Pendapatan",
+            color: "#fb7185",
+        },
+    } satisfies ChartConfig;
+
+    const vehicleColors = ["#60a5fa", "#34d399", "#fbbf24", "#f472b6", "#a78bfa"];
+    const vehiclePieData = vehicleDistribution.map((item: any, idx: number) => ({
+        ...item,
+        fill: vehicleColors[idx % vehicleColors.length],
+    }));
 
     return (
         <DashboardLayout>
@@ -440,10 +435,20 @@ function OwnerDashboard({
                     <p className="text-muted-foreground">Analisis bisnis dan performa</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Pendapatan Bulan Ini</CardTitle>
+                            <CardTitle className="text-sm font-medium leading-tight">Pendapatan Hari Ini</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{formatCurrency(todayRevenue)}</div>
+                            <p className="text-xs text-muted-foreground">Transaksi selesai</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium leading-tight">Pendapatan Bulan Ini</CardTitle>
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -455,7 +460,7 @@ function OwnerDashboard({
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
+                            <CardTitle className="text-sm font-medium leading-tight">Total Pendapatan</CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -465,104 +470,27 @@ function OwnerDashboard({
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Transaksi</CardTitle>
-                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                            <CardTitle className="text-sm font-medium leading-tight">Rata-rata Okupansi</CardTitle>
+                            <Activity className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{totalTransactions}</div>
-                            <p className="text-xs text-muted-foreground">Semua waktu</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Rata-rata Transaksi</CardTitle>
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(avgRevPerTransaction)}</div>
-                            <p className="text-xs text-muted-foreground">Per transaksi</p>
+                            <div className="text-2xl font-bold">{avgOccupancy}%</div>
+                            <p className="text-xs text-muted-foreground">Rata-rata semua area</p>
                         </CardContent>
                     </Card>
                 </div>
 
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Download Rekap Transaksi
-                        </CardTitle>
-                        <CardDescription>Export laporan transaksi parkir dalam format PDF</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileText className="h-5 w-5" />
+                                Download Rekap Transaksi
+                            </CardTitle>
+                            <CardDescription>Export laporan dalam format PDF atau Excel</CardDescription>
+                        </div>
+                        <RekapTransaksiExport areaList={areaList} />
                     </CardHeader>
-                    <CardContent>
-                        <form ref={formRef} action="/download-rekap-pdf" method="POST" onSubmit={handleDownloadRekap}>
-                            {/* CSRF Token */}
-                            <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
-                            
-                            <div className="grid gap-4 md:grid-cols-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="start-date">Tanggal Mulai</Label>
-                                    <Input
-                                        id="start-date"
-                                        name="start_date"
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="end-date">Tanggal Selesai</Label>
-                                    <Input
-                                        id="end-date"
-                                        name="end_date"
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        min={startDate}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="area-filter">Area Parkir</Label>
-                                    <Select value={selectedArea} onValueChange={setSelectedArea}>
-                                        <SelectTrigger id="area-filter">
-                                            <SelectValue placeholder="Pilih area" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Semua Area</SelectItem>
-                                            {areaList?.map((area: any) => (
-                                                <SelectItem key={area.id} value={area.id.toString()}>
-                                                    {area.nama}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {selectedArea !== 'all' && (
-                                        <input type="hidden" name="area_id" value={selectedArea} />
-                                    )}
-                                </div>
-                                <div className="flex items-end">
-                                    <Button 
-                                        type="submit"
-                                        className="w-full"
-                                        disabled={isDownloading}
-                                    >
-                                        {isDownloading ? (
-                                            <>
-                                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                Memproses...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Download className="mr-2 h-4 w-4" />
-                                                Download PDF
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                        </form>
-                    </CardContent>
                 </Card>
 
                 <Card>
@@ -613,53 +541,105 @@ function OwnerDashboard({
                 </Card>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    {/* Area Profitability */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Profitabilitas Area</CardTitle>
-                            <CardDescription>Pendapatan bulan ini per area</CardDescription>
+                            <CardTitle>Pendapatan per Area</CardTitle>
+                            <CardDescription>Top area bulan ini</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-3">
-                                {areaProfitability.slice(0, 5).map((area: any, idx: number) => (
-                                    <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                                        <div>
-                                            <p className="font-medium text-sm">{area.nama}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {area.transactions} transaksi
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-medium">{formatCurrency(area.revenue)}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                Avg: {formatCurrency(area.avgTransaction)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <ChartContainer config={areaRevenueChartConfig} className="h-60 w-full">
+                                <BarChart data={areaRevenueChart}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                    <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(value)} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
                         </CardContent>
                     </Card>
 
-                    {/* Vehicle Distribution */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Distribusi Jenis Kendaraan</CardTitle>
-                            <CardDescription>Bulan ini</CardDescription>
+                            <CardTitle>Distribusi Kendaraan</CardTitle>
+                            <CardDescription>Bulan ini (berdasarkan jumlah)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={{}} className="h-60 w-full">
+                                <PieChart>
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Pie
+                                        data={vehiclePieData}
+                                        dataKey="count"
+                                        nameKey="type"
+                                        innerRadius={50}
+                                        outerRadius={90}
+                                        paddingAngle={3}
+                                    >
+                                        {vehiclePieData.map((entry: any, idx: number) => (
+                                            <Cell key={`cell-${idx}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Performa Petugas</CardTitle>
+                            <CardDescription>Top 5 pendapatan bulan ini</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={petugasChartConfig} className="h-60 w-full">
+                                <BarChart data={petugasPerformance} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis type="number" tickLine={false} axisLine={false} />
+                                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={120} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Insight Cepat</CardTitle>
+                            <CardDescription>Ringkasan performa bisnis</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {vehicleDistribution.map((vehicle: any, idx: number) => (
-                                    <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                                        <div>
-                                            <p className="font-medium text-sm capitalize">{vehicle.type}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {vehicle.count} kendaraan
-                                            </p>
-                                        </div>
-                                        <p className="font-medium">{formatCurrency(vehicle.revenue)}</p>
-                                    </div>
-                                ))}
+                                <div className="flex items-center justify-between border-b pb-2 last:border-0">
+                                    <span className="text-sm text-muted-foreground">Top Area</span>
+                                    <span className="text-sm font-medium">
+                                        {topArea?.name ? `${topArea.name}` : "-"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between border-b pb-2 last:border-0">
+                                    <span className="text-sm text-muted-foreground">Top Petugas</span>
+                                    <span className="text-sm font-medium">
+                                        {topPetugas?.name ? topPetugas.name : "-"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between border-b pb-2 last:border-0">
+                                    <span className="text-sm text-muted-foreground">Kendaraan Dominan</span>
+                                    <span className="text-sm font-medium capitalize">
+                                        {topVehicleType?.type || "-"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between border-b pb-2 last:border-0">
+                                    <span className="text-sm text-muted-foreground">Jam Tersibuk</span>
+                                    <span className="text-sm font-medium">
+                                        {busiestHour?.hour || "-"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Rata-rata Okupansi</span>
+                                    <span className="text-sm font-medium">{avgOccupancy}%</span>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -673,8 +653,8 @@ function OwnerDashboard({
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={{
-                            transactions: { label: "Transaksi", color: "hsl(var(--chart-3))" }
-                        }} className="h-[200px] w-full">
+                            transactions: { label: "Transaksi", color: "#fcd34d" }
+                        }} className="h-50 w-full">
                             <BarChart data={peakHours} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis type="number" tickLine={false} axisLine={false} />

@@ -59,6 +59,41 @@ class User extends Authenticatable
         }
     }
 
+    public function assignedAreas()
+    {
+        return $this->belongsToMany(AreaParkir::class, 'petugas_area', 'user_id', 'area_parkir_id')->withPivot('is_active')->withTimestamps();
+    }
+
+    public function canAccessArea(AreaParkir $areaParkir)
+    {
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        if ($this->role === 'petugas') {
+            return $this->assignedAreas()->where('area_parkir_id', $areaParkir->id)->wherePivot('is_active', true)->exists();
+        }
+
+        return false;
+    }
+
+    public function getAccessibleAreas()
+    {
+        if ($this->role === 'superadmin' || $this->role === 'admin') {
+            return AreaParkir::all();
+        }
+
+        if ($this->role === 'petugas') {
+            return $this->assignedAreas()->wherePivot('is_active', true)->get();
+        }
+
+        return collect();
+    }
+
     /**
      * Get the attributes that should be cast.
      *

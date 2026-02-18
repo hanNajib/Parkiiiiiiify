@@ -126,7 +126,7 @@ class TarifParkirController extends Controller
      */
     public function area(AreaParkir $areaParkir)
     {
-        $tarif = Tarif::where('area_parkir_id', $areaParkir->id)->search()->latest()->paginate(20);
+        $tarif = Tarif::where('area_parkir_id', $areaParkir->id)->search()->latest()->paginate(20)->withQueryString();
         $allTarif = Tarif::where('area_parkir_id', $areaParkir->id)->get();
 
         return Inertia::render('_admin/tarif_parkir/Tarif', [

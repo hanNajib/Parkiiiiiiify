@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AreaParkirController;
 use App\Http\Controllers\Admin\KendaraanController;
 use App\Http\Controllers\Admin\LogAktivitasController;
+use App\Http\Controllers\Admin\PetugasAreaController;
 use App\Http\Controllers\Admin\TarifParkirController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
@@ -27,13 +28,16 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('role:owner,superadmin')->group(function () {
         Route::post('/download-rekap-pdf', [DashboardController::class, 'downloadRekapPDF'])->name('download-rekap-pdf');
+        Route::post('/download-rekap', [DashboardController::class, 'downloadRekap'])->name('download-rekap');
+        Route::get('/api/preview-rekap', [DashboardController::class, 'previewRekap'])->name('preview-rekap');
     });
 
     Route::middleware('role:admin,superadmin')->prefix('admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::get('users/export/excel', [UserController::class, 'exportExcel'])->name('users.export');
         Route::resource('kendaraan', KendaraanController::class);
-        Route::resource('area-parkir', AreaParkirController::class)->except(['create', 'edit', 'show']);
+        Route::resource('area-parkir', AreaParkirController::class)->except(['create', 'edit']);
+        Route::post('area-parkir/{areaParkir}/petugas', [PetugasAreaController::class, 'store'])->name('area-parkir.petugas.store');
         Route::resource('tarif-parkir', TarifParkirController::class);
         Route::resource('log-aktivitas', LogAktivitasController::class)->only(['index', 'show', 'destroy'])->middleware('role:superadmin');
         Route::prefix('tarif-parkir')->name('tarif-parkir.')->group(function () {

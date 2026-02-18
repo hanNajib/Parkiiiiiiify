@@ -13,8 +13,29 @@
             box-sizing: border-box;
         }
 
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: 400;
+            src: url("{{ public_path('fonts/Outfit-Regular.ttf') }}") format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: 600;
+            src: url("{{ public_path('fonts/Outfit-SemiBold.ttf') }}") format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: 700;
+            src: url("{{ public_path('fonts/Outfit-Bold.ttf') }}") format('truetype');
+        }
+
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'Outfit', 'DejaVu Sans', sans-serif;
             font-size: 11px;
             line-height: 1.4;
             color: #1f2937;
@@ -96,6 +117,7 @@
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 10px;
+            table-layout: auto;
         }
 
         table thead {
@@ -125,6 +147,15 @@
 
         table td {
             padding: 7px 6px;
+        }
+
+        .col-fit {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        .col-area {
+            width: auto;
         }
 
         .text-right {
@@ -234,17 +265,17 @@
     <table class="stat-table">
         <thead>
             <tr>
-                <th>Area Parkir</th>
-                <th class="text-center">Jumlah</th>
-                <th class="text-right">Pendapatan</th>
+                <th class="col-area">Area Parkir</th>
+                <th class="text-center col-fit">Jumlah</th>
+                <th class="text-right col-fit">Pendapatan</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($byArea as $item)
                 <tr>
-                    <td>{{ $item['nama'] }}</td>
-                    <td class="text-center">{{ number_format($item['count']) }}</td>
-                    <td class="text-right currency">Rp {{ number_format($item['revenue'], 0, ',', '.') }}</td>
+                    <td class="col-area">{{ $item['nama'] }}</td>
+                    <td class="text-center col-fit">{{ number_format($item['count']) }}</td>
+                    <td class="text-right currency col-fit">Rp {{ number_format($item['revenue'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -254,17 +285,17 @@
     <table class="stat-table">
         <thead>
             <tr>
-                <th>Jenis Kendaraan</th>
-                <th class="text-center">Jumlah</th>
-                <th class="text-right">Pendapatan</th>
+                <th class="col-area">Jenis Kendaraan</th>
+                <th class="text-center col-fit">Jumlah</th>
+                <th class="text-right col-fit">Pendapatan</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($byVehicleType as $item)
                 <tr>
-                    <td style="text-transform: capitalize;">{{ $item['type'] }}</td>
-                    <td class="text-center">{{ number_format($item['count']) }}</td>
-                    <td class="text-right currency">Rp {{ number_format($item['revenue'], 0, ',', '.') }}</td>
+                    <td class="col-area" style="text-transform: capitalize;">{{ $item['type'] }}</td>
+                    <td class="text-center col-fit">{{ number_format($item['count']) }}</td>
+                    <td class="text-right currency col-fit">Rp {{ number_format($item['revenue'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -274,25 +305,25 @@
     <table>
         <thead>
             <tr>
-                <th>No</th>
-                <th>Tanggal</th>
-                <th>Plat Nomor</th>
-                <th>Jenis</th>
-                <th>Area</th>
-                <th class="text-center">Durasi</th>
-                <th class="text-right">Biaya</th>
+                <th class="col-fit">No</th>
+                <th class="col-fit">Tanggal</th>
+                <th class="col-fit">Plat Nomor</th>
+                <th class="col-fit">Jenis</th>
+                <th class="col-area">Area</th>
+                <th class="text-center col-fit">Durasi</th>
+                <th class="text-right col-fit">Biaya</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($transaksi as $index => $trx)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ date('d/m/y H:i', strtotime($trx->waktu_keluar)) }}</td>
-                    <td><strong>{{ $trx->kendaraan->plat_nomor }}</strong></td>
-                    <td style="text-transform: capitalize;">{{ $trx->kendaraan->jenis_kendaraan }}</td>
-                    <td>{{ $trx->areaParkir->nama }}</td>
-                    <td class="text-center">{{ $trx->durasi }} mnt</td>
-                    <td class="text-right currency">Rp {{ number_format($trx->total_biaya, 0, ',', '.') }}</td>
+                    <td class="col-fit">{{ $index + 1 }}</td>
+                    <td class="col-fit">{{ $trx->waktu_keluar ? date('d/m/y H:i', strtotime($trx->waktu_keluar)) : '-' }}</td>
+                    <td class="col-fit"><strong>{{ $trx->kendaraan->plat_nomor ?? '-' }}</strong></td>
+                    <td class="col-fit" style="text-transform: capitalize;">{{ $trx->kendaraan->jenis_kendaraan ?? '-' }}</td>
+                    <td class="col-area">{{ $trx->areaParkir->nama ?? '-' }}</td>
+                    <td class="text-center col-fit">{{ $trx->durasi ?? 0 }} mnt</td>
+                    <td class="text-right currency col-fit">Rp {{ number_format($trx->total_biaya ?? 0, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>

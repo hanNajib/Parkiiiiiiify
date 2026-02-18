@@ -1,26 +1,27 @@
 import { Head, Link } from '@inertiajs/react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import Lenis from 'lenis';
+import { motion, useScroll, useSpring, useTransform } from 'motion/react'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Logo } from '@/components/logo-icon';
-import { 
-    Car, 
-    MapPin, 
-    Clock, 
-    Shield, 
-    BarChart3, 
-    Users, 
+import {
+    Car,
+    MapPin,
+    Clock,
+    Shield,
+    BarChart3,
+    Users,
     Zap,
     CheckCircle2,
     ArrowRight,
@@ -39,14 +40,44 @@ import {
 } from 'lucide-react';
 
 export default function Welcome() {
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) return;
+
+        const lenis = new Lenis({
+            lerp: 0.08,
+            smoothWheel: true,
+            smoothTouch: false,
+            wheelMultiplier: 0.9,
+        });
+
+        let rafId = 0;
+        const raf = (time: number) => {
+            lenis.raf(time);
+            rafId = requestAnimationFrame(raf);
+        };
+
+        rafId = requestAnimationFrame(raf);
+
+        return () => {
+            cancelAnimationFrame(rafId);
+            lenis.destroy();
+        };
+    }, []);
+
     const heroRef = useRef(null);
     const { scrollYProgress } = useScroll({
         target: heroRef,
         offset: ["start start", "end start"]
     });
 
-    const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
-    const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+    const yRaw = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
+    const opacityRaw = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+    const y = useSpring(yRaw, { stiffness: 20, damping: 15, mass: 0.2 });
+    const opacity = useSpring(opacityRaw, { stiffness: 20, damping: 15, mass: 0.2 });
 
     const testimonials = [
         {
@@ -154,10 +185,9 @@ export default function Welcome() {
     return (
         <>
             <Head title="Parkify - Sistem Manajemen Parkir Modern" />
-            
+
             <div className="min-h-screen bg-linear-to-b lg:px-8 from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900">
-                {/* Navigation - OPTIMASI: Kurangin spring stiffness */}
-                <motion.nav 
+                <motion.nav
                     className="border-b bg-white/50 dark:bg-zinc-950/50 backdrop-blur-lg sticky top-0 z-50"
                     initial={{ y: -100 }}
                     animate={{ y: 0 }}
@@ -198,11 +228,11 @@ export default function Welcome() {
 
                 {/* Hero Section - OPTIMIZED PARALLAX & LAPTOP SCREEN FIT */}
                 <section ref={heroRef} className="relative container mx-auto px-4 py-12 md:py-16 lg:py-20 overflow-hidden">
-                    <motion.div style={{ y, opacity }}>
+                    <motion.div style={{ y, opacity }} className='will-change-transform'>
                         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                             {/* Left Side - Text Content */}
                             <div className="space-y-6 lg:space-y-8">
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5 }}
@@ -212,8 +242,8 @@ export default function Welcome() {
                                         Sistem Parkir Pintar & Modern
                                     </Badge>
                                 </motion.div>
-                                
-                                <motion.h1 
+
+                                <motion.h1
                                     className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-tight"
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -228,19 +258,19 @@ export default function Welcome() {
                                         Efisien
                                     </span>
                                 </motion.h1>
-                                
-                                <motion.p 
+
+                                <motion.p
                                     className="text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed"
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.2, duration: 0.5 }}
                                 >
-                                    Parkify adalah sistem manajemen parkir berbasis web yang membantu Anda 
-                                    mengelola multiple area parkir, transaksi kendaraan masuk-keluar, dan menghasilkan 
+                                    Parkify adalah sistem manajemen parkir berbasis web yang membantu Anda
+                                    mengelola multiple area parkir, transaksi kendaraan masuk-keluar, dan menghasilkan
                                     laporan analitik secara real-time.
                                 </motion.p>
-                                
-                                <motion.div 
+
+                                <motion.div
                                     className="flex flex-wrap gap-3 lg:gap-4"
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -257,14 +287,14 @@ export default function Welcome() {
                                         Lihat Demo
                                     </Button>
                                 </motion.div>
-                                
+
                                 <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                                     <CheckCircle2 className="w-4 h-4 text-green-500" />
                                     <span>Gratis selamanya untuk 1 area parkir</span>
                                 </div>
-                                
+
                                 <Separator className="my-4 lg:my-6" />
-                                
+
                                 <div className="flex flex-wrap items-center gap-4 lg:gap-6 pt-2 lg:pt-4">
                                     {[
                                         { value: "100+", label: "Area Parkir" },
@@ -283,16 +313,16 @@ export default function Welcome() {
                                     ))}
                                 </div>
                             </div>
-                            
-                            <motion.div 
+
+                            <motion.div
                                 className="relative w-full h-90 sm:h-105 md:h-112.5 lg:h-120 xl:h-130"
-                                initial={{ opacity: 0, x: 50, y: -100 }}
-                                animate={{ opacity: 1, x: 0, y: -50 }}
-                                transition={{ duration: 0.5 }}
+                                initial={{ opacity: 0, x: 40, y: -20 }}
+                                animate={{ opacity: 1, x: 0, y: 0 }}
+                                transition={{ duration: 0.6 }}
                             >
                                 <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
                                 <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl" />
-                                
+
                                 <div className="relative h-full flex items-center justify-center">
                                     <motion.div
                                         className="relative z-10"
@@ -309,7 +339,7 @@ export default function Welcome() {
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">13 Feb 2026</div>
                                             </div>
-                                            
+
                                             {/* Main Stats */}
                                             <div className="space-y-4">
                                                 <div className="text-center">
@@ -318,14 +348,14 @@ export default function Welcome() {
                                                     </div>
                                                     <div className="text-sm text-muted-foreground mt-1">Kendaraan Parkir</div>
                                                 </div>
-                                                
+
                                                 <div className="space-y-2">
                                                     <div className="flex items-center justify-between text-xs">
                                                         <span className="text-muted-foreground">Kapasitas</span>
                                                         <span className="font-semibold text-primary">82%</span>
                                                     </div>
                                                     <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                                        <motion.div 
+                                                        <motion.div
                                                             className="h-full bg-linear-to-r from-primary to-purple-600"
                                                             initial={{ width: 0 }}
                                                             animate={{ width: "82%" }}
@@ -333,7 +363,7 @@ export default function Welcome() {
                                                         />
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Quick Stats Grid */}
                                                 <div className="grid grid-cols-3 gap-3 pt-2">
                                                     <div className="text-center">
@@ -708,8 +738,8 @@ export default function Welcome() {
                                 </CardContent>
                                 <CardFooter>
                                     <Link href="/register" className="w-full">
-                                        <Button 
-                                            className="w-full gap-2" 
+                                        <Button
+                                            className="w-full gap-2"
                                             variant={plan.highlighted ? "default" : "outline"}
                                             size="lg"
                                         >
@@ -828,7 +858,7 @@ export default function Welcome() {
                                 Siap untuk Memulai?
                             </h2>
                             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                                Bergabunglah dengan Parkify hari ini dan rasakan kemudahan mengelola parkir 
+                                Bergabunglah dengan Parkify hari ini dan rasakan kemudahan mengelola parkir
                                 dengan Laravel 12 + React. Multi-area support, role-based access, dan export PDF/Excel siap pakai!
                             </p>
                             <div className="flex flex-wrap gap-4 justify-center pt-4">
@@ -865,7 +895,7 @@ export default function Welcome() {
                             <div className="md:col-span-2 space-y-4">
                                 <Logo />
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Sistem manajemen parkir berbasis web dengan Laravel 12 + React + TypeScript. 
+                                    Sistem manajemen parkir berbasis web dengan Laravel 12 + React + TypeScript.
                                     Multi-area support, role-based access, dan export PDF/Excel.
                                 </p>
                                 <div className="flex gap-3">

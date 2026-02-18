@@ -61,7 +61,29 @@ class AreaParkirController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $area = AreaParkir::findOrFail($id);
+        
+        // Ambil semua petugas
+        $allPetugas = \App\Models\User::where('role', 'petugas')->get();
+        
+        // Ambil petugas yang sudah di-assign ke area ini
+        $assignedPetugasIds = $area->petugas()->pluck('user_id')->toArray();
+        
+        // Tambahkan info assigned ke setiap petugas
+        $petugasWithStatus = $allPetugas->map(function ($p) use ($assignedPetugasIds) {
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'email' => $p->email,
+                'is_assigned' => in_array($p->id, $assignedPetugasIds),
+            ];
+        });
+
+        return Inertia::render('_admin/area_parkir/Show', [
+            'area' => $area,
+            'allPetugas' => $petugasWithStatus,
+            'assignedPetugasIds' => $assignedPetugasIds,
+        ]);
     }
 
     /**

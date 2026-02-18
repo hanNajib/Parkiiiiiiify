@@ -7,7 +7,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { PropsWithChildren, useMemo, useEffect } from 'react';
+import { PropsWithChildren, useMemo, useEffect, useRef } from 'react';
 import { links } from '@/data/sidebar.config';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
@@ -16,11 +16,14 @@ import { Logo } from '@/components/logo-icon';
 import transaksi from '@/routes/transaksi';
 import { Ticket } from 'lucide-react';
 import type { SidebarLink as SidebarLinkType } from '@/data/sidebar.config';
+import Lenis from 'lenis';
 
 export const SidebarLayout = ({ children }: PropsWithChildren) => {
   const { sidebarOpen, toggleSidebar, cachedAreaParkir, setCachedAreaParkir } = useAppStore();
   const { auth, areaParkir } = usePage<SharedData>().props;
   const role = auth.user.role;
+  const scrollRef = useRef<HTMLElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   // Update cache when areaParkir changes
   useEffect(() => {
@@ -28,6 +31,36 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
       setCachedAreaParkir(areaParkir);
     }
   }, [areaParkir, setCachedAreaParkir]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!scrollRef.current || !contentRef.current) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const lenis = new Lenis({
+      wrapper: scrollRef.current,
+      content: contentRef.current,
+      lerp: 0.08,
+      smoothWheel: true,
+      smoothTouch: false,
+      wheelMultiplier: 0.9,
+    });
+
+    let rafId = 0;
+    const raf = (time: number) => {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    };
+
+    rafId = requestAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
+  }, [sidebarOpen]);
 
   // Use cached area parkir if current areaParkir is from server but prefer server data
   const displayAreas = areaParkir?.length ? areaParkir : cachedAreaParkir;
@@ -104,8 +137,10 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
         </SidebarBody>
 
         <div className="flex flex-1 overflow-hidden">
-          <main className="flex p-7 h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background shadow-sm md:p-10">
-            {children}
+          <main ref={scrollRef} className="flex p-7 h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background shadow-sm md:p-10">
+            <div ref={contentRef} className="min-h-full">
+              {children}
+            </div>
           </main>
         </div>
       </div>

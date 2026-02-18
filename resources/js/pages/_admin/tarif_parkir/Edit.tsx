@@ -77,7 +77,6 @@ export default function Edit({ areaParkir, tarif }: { areaParkir: AreaParkir; ta
             const newData: any = {};
             
             if (normalizedRules.length > 0) {
-                // Convert to JSON string for backend
                 const rulesJsonString = JSON.stringify(normalizedRules);
                 const prevRulesJsonString = typeof prev.progressive_rules === 'string' 
                     ? prev.progressive_rules 

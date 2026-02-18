@@ -49,4 +49,14 @@ class AreaParkir extends Model
     {
         return $this->transaksi()->where('status', 'ongoing')->count();
     }
+
+    public function petugas()
+    {
+        return $this->belongsToMany(User::class, 'petugas_area', 'area_parkir_id', 'user_id')->where('role', 'petugas')->withPivot('is_active')->withTimestamps();
+    }
+
+    public function activePetugas()
+    {
+        return $this->petugas()->wherePivot('is_active', true);
+    }
 }

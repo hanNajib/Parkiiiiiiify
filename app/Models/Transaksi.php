@@ -35,6 +35,10 @@ class Transaksi extends Model
 
     public function scopeDateRange($query)
     {
+        if(request()->query('date_from') === null && request()->query('date_to') === null) {
+            return $query;
+        }
+
         $dateFrom = request()->query('date_from', Carbon::now()->toDateString());
         $dateTo = request()->query('date_to', Carbon::now()->toDateString());
 

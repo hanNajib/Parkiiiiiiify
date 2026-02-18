@@ -12,6 +12,7 @@ use App\Models\Tarif;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
@@ -208,6 +209,17 @@ class DashboardController extends Controller
             ? round((($thisMonth - $lastMonth) / $lastMonth) * 100, 1)
             : 0;
 
+        $todayRevenue = Transaksi::where('status', 'completed')
+            ->whereDate('waktu_keluar', today())
+            ->sum('total_biaya');
+
+        $totalRevenue = Transaksi::where('status', 'completed')->sum('total_biaya');
+        $completedTransactions = Transaksi::where('status', 'completed')->count();
+        $totalTransactions = Transaksi::count();
+        $avgRevPerTransaction = $completedTransactions > 0
+            ? round($totalRevenue / $completedTransactions, 2)
+            : 0;
+
         // ✅ MASYA ALLAH, INI VERSI OPTIMIZED-NYA!
         $areaProfitability = AreaParkir::select('area_parkir.id', 'area_parkir.nama')
             ->addSelect([
@@ -237,6 +249,40 @@ class DashboardController extends Controller
             })
             ->sortByDesc('revenue')
             ->values();
+
+        $areaRevenueChart = $areaProfitability
+            ->map(function ($area) {
+                return [
+                    'name' => $area['nama'],
+                    'revenue' => $area['revenue'],
+                    'transactions' => $area['transactions'],
+                ];
+            })
+            ->values();
+
+        $areaOccupancy = AreaParkir::withCount([
+            'transaksi as ongoing_transactions' => function ($q) {
+                $q->where('status', 'ongoing');
+            }
+        ])
+            ->get()
+            ->map(function ($area) {
+                $occupancyRate = $area->kapasitas > 0
+                    ? round(($area->ongoing_transactions / $area->kapasitas) * 100, 1)
+                    : 0;
+
+                return [
+                    'id' => $area->id,
+                    'nama' => $area->nama,
+                    'kapasitas' => $area->kapasitas,
+                    'ongoing' => $area->ongoing_transactions,
+                    'occupancy' => $occupancyRate,
+                ];
+            });
+
+        $avgOccupancy = $areaOccupancy->count() > 0
+            ? round($areaOccupancy->avg('occupancy'), 1)
+            : 0;
 
         // Vehicle type distribution - INI UDAH BAGUS, tapi bisa lebih optimal
         $vehicleDistribution = DB::table('transaksi')
@@ -276,11 +322,35 @@ class DashboardController extends Controller
                 ];
             });
 
-        $totalRevenue = Transaksi::where('status', 'completed')->sum('total_biaya');
-        $totalTransactions = Transaksi::count();
-        $avgRevPerTransaction = $totalTransactions > 0
-            ? round($totalRevenue / $totalTransactions, 2)
-            : 0;
+        $petugasPerformance = User::where('role', 'petugas')
+            ->select('users.id', 'users.name')
+            ->addSelect([
+                'revenue' => Transaksi::selectRaw('COALESCE(SUM(total_biaya), 0)')
+                    ->whereColumn('petugas_id', 'users.id')
+                    ->where('status', 'completed')
+                    ->whereMonth('waktu_keluar', now()->month)
+                    ->whereYear('waktu_keluar', now()->year),
+                'transactions' => Transaksi::selectRaw('COUNT(*)')
+                    ->whereColumn('petugas_id', 'users.id')
+                    ->where('status', 'completed')
+                    ->whereMonth('waktu_keluar', now()->month)
+                    ->whereYear('waktu_keluar', now()->year),
+            ])
+            ->orderByDesc('revenue')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'name' => $item->name,
+                    'revenue' => $item->revenue ?? 0,
+                    'transactions' => $item->transactions ?? 0,
+                ];
+            });
+
+        $topArea = $areaRevenueChart->first();
+        $topPetugas = $petugasPerformance->first();
+        $topVehicleType = $vehicleDistribution->sortByDesc('revenue')->first();
+        $busiestHour = $peakHours->first();
 
         $areaList = AreaParkir::select('id', 'nama', 'lokasi')->get();
 
@@ -288,13 +358,23 @@ class DashboardController extends Controller
             'revenueData' => $revenueData,
             'thisMonthRevenue' => $thisMonth,
             'lastMonthRevenue' => $lastMonth,
+            'todayRevenue' => $todayRevenue,
             'growthRate' => $growthRate,
             'areaProfitability' => $areaProfitability,
+            'areaRevenueChart' => $areaRevenueChart,
+            'areaOccupancy' => $areaOccupancy,
+            'avgOccupancy' => $avgOccupancy,
             'vehicleDistribution' => $vehicleDistribution,
             'peakHours' => $peakHours,
             'totalRevenue' => $totalRevenue,
             'totalTransactions' => $totalTransactions,
+            'completedTransactions' => $completedTransactions,
             'avgRevPerTransaction' => $avgRevPerTransaction,
+            'petugasPerformance' => $petugasPerformance,
+            'topArea' => $topArea,
+            'topPetugas' => $topPetugas,
+            'topVehicleType' => $topVehicleType,
+            'busiestHour' => $busiestHour,
             'areaList' => $areaList,
         ]);
     }
@@ -372,7 +452,7 @@ class DashboardController extends Controller
                 'generatedAt' => now(),
             ];
 
-            $pdf = PDF::loadView('reports.rekap-transaksi', $data)
+            $pdf = Pdf::loadView('reports.rekap-transaksi', $data)
                 ->setPaper('a4', 'portrait');
 
             $filename = 'Rekap-Transaksi-' . date('Y-m-d-His') . '.pdf';
@@ -383,6 +463,127 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             logger()->error('Error generating PDF: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat PDF. Silakan coba lagi.');
+        }
+    }
+
+    public function previewRekap(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'area_id' => 'nullable|exists:area_parkir,id',
+            ]);
+
+            $startDate = $validated['start_date'];
+            $endDate = $validated['end_date'];
+            $areaId = $validated['area_id'] ?? null;
+
+            $query = Transaksi::where('status', 'completed')
+                ->whereBetween('waktu_keluar', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+            if ($areaId) {
+                $query->where('area_parkir_id', $areaId);
+            }
+
+            $transaksi = $query->get();
+
+            $totalRevenue = $transaksi->sum('total_biaya');
+            $totalTransactions = $transaksi->count();
+            $avgRevenue = $totalTransactions > 0 ? $totalRevenue / $totalTransactions : 0;
+
+            return response()->json([
+                'totalTransactions' => $totalTransactions,
+                'totalRevenue' => $totalRevenue,
+                'avgRevenue' => $avgRevenue,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal membuat preview'], 500);
+        }
+    }
+
+    public function downloadRekap(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'area_id' => 'nullable|exists:area_parkir,id',
+                'format' => 'required|in:pdf,excel',
+            ]);
+
+            $startDate = $validated['start_date'];
+            $endDate = $validated['end_date'];
+            $areaId = $validated['area_id'] ?? null;
+            $format = $validated['format'];
+
+            // Get transactions
+            $query = Transaksi::with(['kendaraan', 'areaParkir', 'tarif', 'petugas'])
+                ->where('status', 'completed')
+                ->whereBetween('waktu_keluar', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+            if ($areaId) {
+                $query->where('area_parkir_id', $areaId);
+            }
+
+            $transaksi = $query->orderBy('waktu_keluar', 'desc')->get();
+
+            if ($transaksi->isEmpty()) {
+                return response()->json(['error' => 'Tidak ada transaksi pada periode yang dipilih'], 404);
+            }
+
+            // Calculate summary
+            $totalRevenue = $transaksi->sum('total_biaya');
+            $totalTransactions = $transaksi->count();
+            $avgDurasi = $transaksi->avg('durasi');
+
+            // Group by area
+            $byArea = $transaksi->groupBy('area_parkir_id')->map(function ($items) {
+                return [
+                    'nama' => $items->first()->areaParkir->nama ?? 'Unknown',
+                    'count' => $items->count(),
+                    'revenue' => $items->sum('total_biaya'),
+                ];
+            });
+
+            // Group by vehicle type
+            $byVehicleType = $transaksi->groupBy('kendaraan.jenis_kendaraan')->map(function ($items, $type) {
+                return [
+                    'type' => $type ?: 'Unknown',
+                    'count' => $items->count(),
+                    'revenue' => $items->sum('total_biaya'),
+                ];
+            });
+
+            $area = $areaId ? AreaParkir::find($areaId) : null;
+
+            $data = [
+                'transaksi' => $transaksi,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'area' => $area,
+                'totalRevenue' => $totalRevenue,
+                'totalTransactions' => $totalTransactions,
+                'avgDurasi' => $avgDurasi,
+                'byArea' => $byArea,
+                'byVehicleType' => $byVehicleType,
+                'generatedAt' => now(),
+            ];
+
+            if ($format === 'pdf') {
+                $pdf = Pdf::loadView('reports.rekap-transaksi', $data)
+                    ->setPaper('a4', 'portrait');
+
+                $filename = 'Rekap-Transaksi-' . date('Y-m-d-His') . '.pdf';
+                return $pdf->download($filename);
+            } else {
+                // Excel export
+                $filename = 'Rekap-Transaksi-' . date('Y-m-d-His') . '.xlsx';
+                return Excel::download(new \App\Exports\RekapTransaksiExport($data), $filename);
+            }
+        } catch (\Exception $e) {
+            logger()->error('Error generating export: ' . $e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan saat membuat file'], 500);
         }
     }
 }
