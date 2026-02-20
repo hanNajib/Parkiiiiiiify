@@ -17,7 +17,6 @@ type EditFormData = {
     plat_nomor: string;
     jenis_kendaraan: "motor" | "mobil" | "lainnya";
     warna: string;
-    pemilik: string;
 };
 
 interface EditModalProps {
@@ -38,7 +37,6 @@ export default function EditModal({ kendaraan, controlled = false, isOpen, onOpe
         plat_nomor: kendaraan.plat_nomor,
         jenis_kendaraan: kendaraan.jenis_kendaraan,
         warna: kendaraan.warna,
-        pemilik: kendaraan.pemilik,
     });
 
     // Reset form ketika kendaraan berubah (untuk controlled mode)
@@ -48,7 +46,6 @@ export default function EditModal({ kendaraan, controlled = false, isOpen, onOpe
                 plat_nomor: kendaraan.plat_nomor,
                 jenis_kendaraan: kendaraan.jenis_kendaraan,
                 warna: kendaraan.warna,
-                pemilik: kendaraan.pemilik,
             });
         }
     }, [kendaraan.id, isOpen, controlled]);
@@ -119,22 +116,7 @@ export default function EditModal({ kendaraan, controlled = false, isOpen, onOpe
                             )}
                         </Field>
 
-                        <Field>
-                            <Label htmlFor="pemilik">Pemilik</Label>
-                            <Input 
-                                id="pemilik" 
-                                name="pemilik" 
-                                type="text"
-                                value={data.pemilik}
-                                onChange={(e) => setData('pemilik', e.target.value)}
-                                placeholder="Nama pemilik kendaraan"
-                                className={errors.pemilik ? 'border-destructive' : ''}
-                                disabled={processing}
-                            />
-                            {errors.pemilik && (
-                                <p className="text-sm text-destructive mt-1">{errors.pemilik}</p>
-                            )}
-                        </Field>
+                        
 
                         <Field>
                             <Label htmlFor="warna">Warna</Label>

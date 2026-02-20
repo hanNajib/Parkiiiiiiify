@@ -21,7 +21,7 @@ class StoreRequest extends FormRequest
             | BASIC
             |--------------------------------------------------------------------------
             */
-            'area_parkir_id' => 'required|exists:area_parkir,id',
+            'area_parkir_id' => 'required|exists:tenant.area_parkir,id',
             'rule_type' => 'required|in:flat,interval,progressive',
             'jenis_kendaraan' => 'required|in:motor,mobil,lainnya',
 

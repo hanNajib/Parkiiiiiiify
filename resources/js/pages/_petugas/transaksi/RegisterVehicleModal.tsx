@@ -18,7 +18,6 @@ export default function RegisterVehicleModal({ onVehicleRegistered }: RegisterVe
     const [formData, setFormData] = useState({
         plat_nomor: '',
         jenis_kendaraan: '',
-        pemilik: '',
         warna: '',
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -47,7 +46,6 @@ export default function RegisterVehicleModal({ onVehicleRegistered }: RegisterVe
                 setFormData({
                     plat_nomor: '',
                     jenis_kendaraan: '',
-                    pemilik: '',
                     warna: '',
                 });
                 setErrors({});
@@ -74,7 +72,6 @@ export default function RegisterVehicleModal({ onVehicleRegistered }: RegisterVe
             setFormData({
                 plat_nomor: '',
                 jenis_kendaraan: '',
-                pemilik: '',
                 warna: '',
             });
             setErrors({});
@@ -136,21 +133,6 @@ export default function RegisterVehicleModal({ onVehicleRegistered }: RegisterVe
                             )}
                         </div>
 
-                        {/* Nama Pemilik */}
-                        <div>
-                            <Label htmlFor="pemilik">Nama Pemilik *</Label>
-                            <Input
-                                id="pemilik"
-                                placeholder="Masukkan nama pemilik"
-                                value={formData.pemilik}
-                                onChange={(e) => setFormData({ ...formData, pemilik: e.target.value })}
-                                className={errors.pemilik ? 'border-destructive' : ''}
-                                disabled={processing}
-                            />
-                            {errors.pemilik && (
-                                <p className="text-sm text-destructive mt-1">{errors.pemilik}</p>
-                            )}
-                        </div>
 
                         {/* Warna */}
                         <div>

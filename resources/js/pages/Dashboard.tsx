@@ -45,18 +45,18 @@ export default function DashboardPage(props: DashboardProps) {
 }
 
 function AdminDashboard({ 
-    totalRevenue, 
-    todayRevenue, 
-    monthRevenue, 
-    totalTransactions,
-    ongoingTransactions,
-    completedTransactions,
-    total_areas,
-    total_vehicles,
-    totalUsers,
-    revenueChart,
-    areaPerformance,
-    recentTransactions,
+    totalRevenue = 0,
+    todayRevenue = 0,
+    monthRevenue = 0,
+    totalTransactions = 0,
+    ongoingTransactions = 0,
+    completedTransactions = 0,
+    total_areas = 0,
+    total_vehicles = 0,
+    totalUsers = 0,
+    revenueChart = [],
+    areaPerformance = [],
+    recentTransactions = [],
     formatCurrency,
     formatDate
 }: any) {
@@ -221,12 +221,12 @@ function AdminDashboard({
 }
 
 function PetugasDashboard({ 
-    todayTransactions, 
-    todayRevenue, 
-    ongoingNow,
-    myTransactions,
-    hourlyActivity,
-    availableAreas,
+    todayTransactions = 0,
+    todayRevenue = 0,
+    ongoingNow = 0,
+    myTransactions = [],
+    hourlyActivity = [],
+    availableAreas = [],
     formatCurrency 
 }: any) {
     return (
@@ -318,7 +318,9 @@ function PetugasDashboard({
                                         <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
                                             <div 
                                                 className="h-full bg-primary" 
-                                                style={{ width: `${(area.terisi / area.kapasitas) * 100}%` }}
+                                                style={{
+                                                    width: `${area.kapasitas ? (area.terisi / area.kapasitas) * 100 : 0}%`
+                                                }}
                                             />
                                         </div>
                                     </div>
@@ -363,24 +365,24 @@ function PetugasDashboard({
 }
 
 function OwnerDashboard({ 
-    revenueData,
-    thisMonthRevenue,
-    todayRevenue,
-    growthRate,
-    areaRevenueChart,
-    avgOccupancy,
-    vehicleDistribution,
-    peakHours,
-    totalRevenue,
-    totalTransactions,
-    completedTransactions,
-    avgRevPerTransaction,
-    petugasPerformance,
+    revenueData = [],
+    thisMonthRevenue = 0,
+    todayRevenue = 0,
+    growthRate = 0,
+    areaRevenueChart = [],
+    avgOccupancy = 0,
+    vehicleDistribution = [],
+    peakHours = [],
+    totalRevenue = 0,
+    totalTransactions = 0,
+    completedTransactions = 0,
+    avgRevPerTransaction = 0,
+    petugasPerformance = [],
     topArea,
     topPetugas,
     topVehicleType,
     busiestHour,
-    areaList,
+    areaList = [],
     formatCurrency,
     formatDate
 }: any) {

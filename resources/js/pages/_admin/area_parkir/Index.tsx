@@ -7,8 +7,7 @@ import { AreaParkir, PaginatedData } from '@/types'
 import DashboardHeader from '@/components/dashboard-header'
 import StatCard from '@/components/StatCard'
 import CreateModal from './CreateModal'
-import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from '@/components/ui/dropdown-menu'
-import { Box, CheckCircle, CircleDashed, DollarSignIcon, EllipsisVertical, Grid, ParkingCircle, ParkingSquare, Trash } from 'lucide-react'
+import { Box, CheckCircle, CircleDashed, DollarSignIcon, Grid, ParkingCircle, ParkingSquare, Trash } from 'lucide-react'
 import EditModal from './EditModal'
 import { ConfirmDelete } from '@/components/confirmModal'
 import areaParkirRoute from '@/routes/area-parkir'
@@ -155,29 +154,24 @@ export default function Index({ areaParkir, stats, filter }: Props) {
                         })}
                       </td>
                       <td className="px-6 py-4">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='icon' className='float-right cursor-pointer'>
-                              <EllipsisVertical />
+                        <div className='flex items-center justify-end gap-2'>
+                          <EditModal area={area}></EditModal>
+                          <Link href={`/admin/tarif-parkir/area/${area.id}`}>
+                            <Button variant='outline' size='sm' title='Kelola Tarif Parkir'>
+                              <DollarSignIcon className='h-4 w-4'/>
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuGroup>
-                              <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                              <EditModal area={area}></EditModal>
-                              <DropdownMenuItem>
-                                <Link className='flex items-center justify-center gap-2' href={`/admin/tarif-parkir/area/${area.id}`}>
-                                  <DollarSignIcon/>Tarif Parkir
-                                </Link>
-                              </DropdownMenuItem>
-                              <ConfirmDelete deleteUrl={areaParkirRoute.destroy(area.id).url}>
-                                <DropdownMenuItem variant='destructive' onSelect={(e) => e.preventDefault()}>
-                                  <Trash/>Hapus
-                                </DropdownMenuItem>
-                              </ConfirmDelete>
-                            </DropdownMenuGroup>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </Link>
+                          <Link href={`/admin/area-parkir/${area.id}`}>
+                            <Button variant='outline' size='sm' title='Kelola Petugas'>
+                              <IconUser className='h-4 w-4'/>
+                            </Button>
+                          </Link>
+                          <ConfirmDelete deleteUrl={areaParkirRoute.destroy(area.id).url}>
+                            <Button variant='destructive' size='sm' title='Hapus Area Parkir'>
+                              <Trash className='h-4 w-4'/>
+                            </Button>
+                          </ConfirmDelete>
+                        </div>
                       </td>
                     </tr>
                   ))

@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
 use App\Traits\Loggable;
+use App\Traits\TenantAware;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AreaParkir extends Model
 {
-    use HasSearchAndFilter, SoftDeletes, Loggable;
+    use HasSearchAndFilter, SoftDeletes, Loggable, TenantAware;
 
     protected $table = 'area_parkir';
     protected $guarded = [];
@@ -52,11 +53,11 @@ class AreaParkir extends Model
 
     public function petugas()
     {
-        return $this->belongsToMany(User::class, 'petugas_area', 'area_parkir_id', 'user_id')->where('role', 'petugas')->withPivot('is_active')->withTimestamps();
+        return $this->hasMany(PetugasArea::class, 'area_parkir_id');
     }
 
     public function activePetugas()
     {
-        return $this->petugas()->wherePivot('is_active', true);
+        return $this->petugas()->where('is_active', true);
     }
 }

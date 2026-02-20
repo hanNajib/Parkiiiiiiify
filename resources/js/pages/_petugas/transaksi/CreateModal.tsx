@@ -37,8 +37,7 @@ export default function CreateModal({ areaParkir, kendaraanList: initialKendaraa
         if (searchKendaraan.length < 2) return [];
         const search = searchKendaraan.toLowerCase();
         return kendaraanList.filter(
-            k => k.plat_nomor.toLowerCase().includes(search) || 
-                 k.pemilik.toLowerCase().includes(search)
+            k => k.plat_nomor.toLowerCase().includes(search)
         );
     }, [searchKendaraan, kendaraanList]);
 
@@ -100,7 +99,7 @@ export default function CreateModal({ areaParkir, kendaraanList: initialKendaraa
                                         className={cn("w-full justify-between", errors.kendaraan_id && "border-destructive")}
                                     >
                                         {selectedKendaraan
-                                            ? `${selectedKendaraan.plat_nomor} - ${selectedKendaraan.pemilik}`
+                                            ? `${selectedKendaraan.plat_nomor}`
                                             : "Cari kendaraan..."}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
@@ -108,7 +107,7 @@ export default function CreateModal({ areaParkir, kendaraanList: initialKendaraa
                                 <PopoverContent className="w-100 p-0">
                                     <Command shouldFilter={false}>
                                         <CommandInput 
-                                            placeholder="Cari plat nomor atau pemilik..." 
+                                            placeholder="Cari plat nomor" 
                                             value={searchKendaraan}
                                             onValueChange={setSearchKendaraan}
                                         />
@@ -140,7 +139,7 @@ export default function CreateModal({ areaParkir, kendaraanList: initialKendaraa
                                                                     <div className="flex flex-col">
                                                                         <span className="font-medium">{kendaraan.plat_nomor}</span>
                                                                         <span className="text-xs text-muted-foreground">
-                                                                            {kendaraan.pemilik} - {kendaraan.jenis_kendaraan}
+                                                                           {kendaraan.jenis_kendaraan}
                                                                         </span>
                                                                     </div>
                                                                 </CommandItem>
@@ -168,7 +167,6 @@ export default function CreateModal({ areaParkir, kendaraanList: initialKendaraa
                                         <p className="font-medium">Informasi Kendaraan:</p>
                                         <p><strong>Plat Nomor:</strong> {selectedKendaraan.plat_nomor}</p>
                                         <p><strong>Jenis:</strong> {selectedKendaraan.jenis_kendaraan}</p>
-                                        <p><strong>Pemilik:</strong> {selectedKendaraan.pemilik}</p>
                                         <p><strong>Warna:</strong> {selectedKendaraan.warna}</p>
                                         <div className="mt-2 pt-2 border-t">
                                             <p className="text-xs text-muted-foreground">

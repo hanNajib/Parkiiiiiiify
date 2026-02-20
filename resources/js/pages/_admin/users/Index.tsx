@@ -81,7 +81,6 @@ export default function Index({ users, filter }: Props) {
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="petugas">Petugas</SelectItem>
                     <SelectItem value="owner">Owner</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -164,9 +163,10 @@ export default function Index({ users, filter }: Props) {
                       <td className="px-6 py-4">
                         <span className={cn(
                           "inline-flex rounded-full px-3 py-1 text-xs font-medium",
-                          user.role === 'Admin' && "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-                          user.role === 'Moderator' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-                          user.role === 'User' && "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                          user.role === 'owner' && "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+                          user.role === 'admin' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                          user.role === 'petugas' && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                          user.role === 'superadmin' && "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
                         )}>
                           {user.role}
                         </span>

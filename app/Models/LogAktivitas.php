@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
+use App\Traits\TenantAware;
 use Illuminate\Database\Eloquent\Model;
 
 class LogAktivitas extends Model
 {
-    use HasSearchAndFilter;
+    use HasSearchAndFilter, TenantAware;
 
     protected $table = 'log_aktivitas';
     protected $guarded = [];

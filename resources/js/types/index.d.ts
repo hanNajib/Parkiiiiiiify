@@ -33,7 +33,6 @@ export interface Kendaraan {
     plat_nomor: string;
     jenis_kendaraan: "motor" | "mobil" | "lainnya";
     warna: string;
-    pemilik: string;
     user?: User;
 }
 
@@ -113,7 +112,6 @@ export interface Kendaraan {
     plat_nomor: string;
     jenis_kendaraan: 'motor'| 'mobil' | 'lainnya';
     warna: string;
-    pemilik: string;
     user_id: number | null;
     created_at: string;
     updated_at: string;

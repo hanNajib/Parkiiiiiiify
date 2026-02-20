@@ -184,7 +184,7 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, fil
                 <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Cari berdasarkan plat nomor atau pemilik kendaraan..."
+                  placeholder="Cari berdasarkan plat nomor"
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -334,9 +334,6 @@ export default function Index({ transaksi, stats, areaParkir, kendaraanList, fil
                             <div>
                               <div className="font-medium text-foreground">
                                 {item.kendaraan?.plat_nomor || '-'}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {item.kendaraan?.pemilik || '-'}
                               </div>
                             </div>
                           </div>

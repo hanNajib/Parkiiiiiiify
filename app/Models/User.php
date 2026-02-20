@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Traits\HasSearchAndFilter;
 use App\Traits\Loggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -16,6 +17,8 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasSearchAndFilter, SoftDeletes, Loggable;
+
+    protected $connection = 'mysql';
 
     /**
      * The attributes that are mass assignable.
@@ -45,15 +48,66 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    /**
+     * Get all tenants this user belongs to
+     */
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_user')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get current active tenant for this user
+     */
+    public function getCurrentTenant(): ?Tenant
+    {
+        if (!app()->has(Tenant::class)) {
+            return null;
+        }
+
+        $tenant = app(Tenant::class);
+
+        // Verify user has access to this tenant
+        if ($this->tenants()->where('tenant_id', $tenant->id)->exists()) {
+            return $tenant;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get user's role in a specific tenant
+     */
+    public function getRoleInTenant(Tenant $tenant): ?string
+    {
+        return $this->tenants()
+            ->where('tenant_id', $tenant->id)
+            ->first()
+            ?->pivot
+            ?->role;
+    }
+
+    /**
+     * Check if user is admin in a tenant
+     */
+    public function isAdminInTenant(Tenant $tenant): bool
+    {
+        return $this->getRoleInTenant($tenant) === 'admin';
+    }
+
     public function scopeRole($query) {
         $role = Auth::user()->role;
         switch ($role) {
             case 'superadmin':
                 return $query;
+            case 'owner':
+                return $query->whereIn('role', ['owner', 'admin', 'petugas']);
             case 'admin':
-                return $query->where('role', '!=', 'superadmin');
+                return $query->whereIn('role', ['petugas']);
             case 'petugas':
-                return $query->whereIn('role', ['owner', 'user', 'admin']);
+                return $query->where('id', Auth::id());
             default:
                 return $query->where('id', Auth::id());
         }
@@ -70,6 +124,10 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($this->role === 'owner') {
+            return true;
+        }
+
         if ($this->role === 'admin') {
             return true;
         }
@@ -83,7 +141,7 @@ class User extends Authenticatable
 
     public function getAccessibleAreas()
     {
-        if ($this->role === 'superadmin' || $this->role === 'admin') {
+        if (in_array($this->role, ['superadmin', 'owner', 'admin'], true)) {
             return AreaParkir::all();
         }
 

@@ -5,18 +5,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IconPlus, IconLoader2 } from "@tabler/icons-react";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import { FormEventHandler, useState } from "react";
 import usersRoute from "@/routes/users";
 
 export default function CreateModal() {
     const [open, setOpen] = useState(false);
+    const { props } = usePage();
+    const userRole = (props as any)?.auth?.user?.role as string | undefined;
+    const allowedRoles = userRole === 'owner'
+        ? ['admin', 'petugas']
+        : userRole === 'admin'
+            ? ['petugas']
+            : userRole === 'superadmin'
+                ? ['owner', 'admin', 'petugas']
+                : [];
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
-        role: 'petugas',
+        role: allowedRoles[0] ?? 'petugas',
     });
 
     const handleSubmit: FormEventHandler = (e) => {
@@ -111,6 +121,28 @@ export default function CreateModal() {
                             />
                             {errors.password_confirmation && (
                                 <p className="text-sm text-destructive mt-1">{errors.password_confirmation}</p>
+                            )}
+                        </Field>
+
+                        <Field>
+                            <Label htmlFor="role">Role</Label>
+                            <Select
+                                value={data.role}
+                                onValueChange={(value) => setData('role', value)}
+                            >
+                                <SelectTrigger id="role">
+                                    <SelectValue placeholder="Pilih role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {allowedRoles.map((role) => (
+                                        <SelectItem key={role} value={role}>
+                                            {role}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.role && (
+                                <p className="text-sm text-destructive mt-1">{errors.role}</p>
                             )}
                         </Field>
                     </div>

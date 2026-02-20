@@ -6,33 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('kendaraan', function (Blueprint $table) {
             $table->id();
-            $table->string('plat_nomor');
+            $table->unsignedBigInteger('user_id');
+            $table->string('plat_nomor')->unique();
             $table->enum('jenis_kendaraan', ['motor', 'mobil', 'lainnya'])->default('lainnya');
             $table->string('warna');
-            $table->string('pemilik');
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->softDeletes();
             $table->timestamps();
-            
-            // Indexes for performance
-            $table->unique('plat_nomor');
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->index('jenis_kendaraan');
             $table->index(['user_id', 'jenis_kendaraan']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('kendaraans');
+        Schema::dropIfExists('kendaraan');
     }
 };

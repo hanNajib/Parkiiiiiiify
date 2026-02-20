@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo-icon";
 import { IconMail } from "@tabler/icons-react";
 import { Link } from "@inertiajs/react";
 import { PropsWithChildren, ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface AuthLayoutProps {
   children: ReactNode;

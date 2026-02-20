@@ -9,6 +9,7 @@ use App\Models\AreaParkir;
 use App\Models\Kendaraan;
 use App\Models\User;
 use App\Models\Tarif;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,6 +21,16 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $role = $user->role;
+
+        if (!app()->has(Tenant::class)) {
+            if ($role === 'superadmin') {
+                return redirect()->route('tenants.approvals.index');
+            }
+
+            return Inertia::render('auth/pending-approval', [
+                'userRole' => $role,
+            ]);
+        }
 
         $commonStats = [
             'total_areas' => AreaParkir::count(),
@@ -284,26 +295,23 @@ class DashboardController extends Controller
             ? round($areaOccupancy->avg('occupancy'), 1)
             : 0;
 
-        // Vehicle type distribution - INI UDAH BAGUS, tapi bisa lebih optimal
-        $vehicleDistribution = DB::table('transaksi')
-            ->join('kendaraan', 'transaksi.kendaraan_id', '=', 'kendaraan.id')
-            ->where('transaksi.status', 'completed')
-            ->whereMonth('transaksi.created_at', now()->month)
-            ->whereYear('transaksi.created_at', now()->year)
-            ->select(
-                'kendaraan.jenis_kendaraan as type',
-                DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(transaksi.total_biaya) as revenue')
-            )
-            ->groupBy('kendaraan.jenis_kendaraan')
+        // Vehicle type distribution - avoid cross-DB join, use relation and group in memory
+        $vehicleDistribution = Transaksi::with('kendaraan')
+            ->where('status', 'completed')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->get()
-            ->map(function ($item) {
+            ->groupBy(function ($item) {
+                return $item->kendaraan?->jenis_kendaraan ?: 'Unknown';
+            })
+            ->map(function ($items, $type) {
                 return [
-                    'type' => $item->type ?: 'Unknown',
-                    'count' => $item->count,
-                    'revenue' => $item->revenue,
+                    'type' => $type,
+                    'count' => $items->count(),
+                    'revenue' => $items->sum('total_biaya'),
                 ];
-            });
+            })
+            ->values();
 
         $peakHours = Transaksi::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
@@ -386,7 +394,7 @@ class DashboardController extends Controller
             $validated = $request->validate([
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
-                'area_id' => 'nullable|exists:area_parkir,id',
+                'area_id' => 'nullable|exists:tenant.area_parkir,id',
             ], [
                 'start_date.required' => 'Tanggal mulai harus diisi',
                 'end_date.required' => 'Tanggal selesai harus diisi',
@@ -472,7 +480,7 @@ class DashboardController extends Controller
             $validated = $request->validate([
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
-                'area_id' => 'nullable|exists:area_parkir,id',
+                'area_id' => 'nullable|exists:tenant.area_parkir,id',
             ]);
 
             $startDate = $validated['start_date'];
@@ -508,7 +516,7 @@ class DashboardController extends Controller
             $validated = $request->validate([
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
-                'area_id' => 'nullable|exists:area_parkir,id',
+                'area_id' => 'nullable|exists:tenant.area_parkir,id',
                 'format' => 'required|in:pdf,excel',
             ]);
 

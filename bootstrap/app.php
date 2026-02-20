@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\InitializeTenant;
 use App\Http\Middleware\Role;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,13 +16,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(prepend: [
+            InitializeTenant::class,
+        ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
         $middleware->alias([
-            'role' => Role::class
+            'role' => Role::class,
+            'tenant' => InitializeTenant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

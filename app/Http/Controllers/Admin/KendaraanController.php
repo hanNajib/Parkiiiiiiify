@@ -45,23 +45,31 @@ class KendaraanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'plat_nomor' => 'required|string|max:20|unique:kendaraan,plat_nomor',
+            'plat_nomor' => 'required|string|max:20',
             'jenis_kendaraan' => 'required|in:mobil,motor,lainnya',
-            'pemilik' => 'nullable|string|max:255',
             'warna' => 'nullable|string|max:50',
-        ], [
-            'plat_nomor.required' => 'Plat nomor wajib diisi',
-            'plat_nomor.unique' => 'Plat nomor sudah terdaftar',
-            'jenis_kendaraan.required' => 'Jenis kendaraan wajib dipilih',
-            'jenis_kendaraan.in' => 'Jenis kendaraan tidak valid',
         ]);
 
-        $validated['user_id'] = Auth::user()->id;
+        $kendaraan = Kendaraan::withTrashed()
+            ->where('plat_nomor', $validated['plat_nomor'])
+            ->first();
+
+        if ($kendaraan) {
+            if ($kendaraan->trashed()) {
+                $kendaraan->restore();
+                return back()->with('success', 'Kendaraan ditemukan di sampah dan berhasil dipulihkan');
+            }
+
+            return back()->with('error', 'Plat nomor sudah terdaftar');
+        }
+
+        $validated['user_id'] = Auth::id();
 
         Kendaraan::create($validated);
 
-        return redirect()->back()->with('success', 'Kendaraan berhasil ditambahkan');
+        return back()->with('success', 'Kendaraan berhasil ditambahkan');
     }
+
 
     /**
      * Display the specified resource.
@@ -87,9 +95,8 @@ class KendaraanController extends Controller
         $kendaraan = Kendaraan::findOrFail($id);
 
         $validated = $request->validate([
-            'plat_nomor' => 'required|string|max:20|unique:kendaraan,plat_nomor,' . $kendaraan->id,
+            'plat_nomor' => 'required|string|max:20|unique:mysql.kendaraan,plat_nomor,' . $kendaraan->id,
             'jenis_kendaraan' => 'required|in:mobil,motor,lainnya',
-            'pemilik' => 'nullable|string|max:255',
             'warna' => 'nullable|string|max:50',
         ], [
             'plat_nomor.required' => 'Plat nomor wajib diisi',
@@ -108,26 +115,89 @@ class KendaraanController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $kendaraan = Kendaraan::findOrFail($id);
+        $kendaraan->delete();
+
+        return redirect()->back()->with('success', 'Kendaraan berhasil dihapus');
     }
 
-public function scanPlat(Request $request)
-{
-    try {
-        $request->validate([
-            'photo' => 'required|image|max:5120',
-            'pre_scanned_plate' => 'nullable|string'
-        ]);
+    public function scanPlat(Request $request)
+    {
+        try {
+            $request->validate([
+                'photo' => 'required|image|max:5120',
+                'pre_scanned_plate' => 'nullable|string'
+            ]);
 
-        $photoFile = $request->file('photo');
-        $imageInfo = getimagesize($photoFile->getRealPath());
-        if ($request->has('pre_scanned_plate') && !empty($request->pre_scanned_plate)) {
-            $preScannedPlate = $this->normalizePlateNumber($request->pre_scanned_plate);
-            
-            $existingKendaraan = Kendaraan::whereRaw(
-                "REPLACE(REPLACE(plat_nomor, ' ', ''), '-', '') = ?",
-                [$preScannedPlate]
-            )->first();
+            $photoFile = $request->file('photo');
+            $imageInfo = getimagesize($photoFile->getRealPath());
+            if ($request->has('pre_scanned_plate') && !empty($request->pre_scanned_plate)) {
+                $preScannedPlate = $this->normalizePlateNumber($request->pre_scanned_plate);
+
+                $existingKendaraan = Kendaraan::whereRaw(
+                    "REPLACE(REPLACE(plat_nomor, ' ', ''), '-', '') = ?",
+                    [$preScannedPlate]
+                )->first();
+
+                if ($existingKendaraan) {
+                    return response()->json([
+                        'success' => true,
+                        'exists' => true,
+                        'message' => 'Kendaraan sudah terdaftar',
+                        'data' => $existingKendaraan,
+                        'source' => 'database'
+                    ]);
+                }
+            }
+
+            // HIT PLATERECOGNIZER API
+            $client = new Client();
+
+            $response = $client->post('https://api.platerecognizer.com/v1/plate-reader/', [
+                'headers' => [
+                    'Authorization' => 'Token ' . config('app.platerecognizer_api'),
+                ],
+                'multipart' => [
+                    [
+                        'name' => 'upload',
+                        'contents' => fopen($photoFile->getRealPath(), 'r'),
+                        'filename' => $photoFile->getClientOriginalName()
+                    ],
+                    [
+                        'name' => 'regions',
+                        'contents' => 'id'
+                    ],
+                    [
+                        'name' => 'mmc',
+                        'contents' => 'true'
+                    ]
+                ],
+                'timeout' => 30
+            ]);
+
+            $result = json_decode($response->getBody(), true);
+
+            if (empty($result['results'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Plat nomor tidak terdeteksi. Pastikan foto jelas dan plat nomor terlihat.'
+                ], 422);
+            }
+
+            $firstResult = $result['results'][0];
+            $platNomor = strtoupper($firstResult['plate']);
+            $confidence = $firstResult['score'] ?? 0;
+
+            $vehicleData = $firstResult['vehicle'] ?? null;
+            $vehicleType = 'Unknown';
+
+            if ($vehicleData && isset($vehicleData['type'])) {
+                $vehicleType = $vehicleData['type'];
+            }
+
+            $jenisKendaraan = $this->mapVehicleType($vehicleType);
+
+            $existingKendaraan = Kendaraan::where('plat_nomor', $platNomor)->first();
 
             if ($existingKendaraan) {
                 return response()->json([
@@ -135,102 +205,39 @@ public function scanPlat(Request $request)
                     'exists' => true,
                     'message' => 'Kendaraan sudah terdaftar',
                     'data' => $existingKendaraan,
-                    'source' => 'database'
+                    'source' => 'platerecognizer'
                 ]);
             }
-        }
 
-        // HIT PLATERECOGNIZER API
-        $client = new Client();
-        
-        $response = $client->post('https://api.platerecognizer.com/v1/plate-reader/', [
-            'headers' => [
-                'Authorization' => 'Token ' . config('app.platerecognizer_api'),
-            ],
-            'multipart' => [
-                [
-                    'name' => 'upload',
-                    'contents' => fopen($photoFile->getRealPath(), 'r'),
-                    'filename' => $photoFile->getClientOriginalName()
-                ],
-                [
-                    'name' => 'regions',
-                    'contents' => 'id'
-                ],
-                [
-                    'name' => 'mmc',
-                    'contents' => 'true'
-                ]
-            ],
-            'timeout' => 30
-        ]);
-
-        $result = json_decode($response->getBody(), true);
-
-        if (empty($result['results'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Plat nomor tidak terdeteksi. Pastikan foto jelas dan plat nomor terlihat.'
-            ], 422);
-        }
-
-        $firstResult = $result['results'][0];
-        $platNomor = strtoupper($firstResult['plate']);
-        $confidence = $firstResult['score'] ?? 0;
-        
-        $vehicleData = $firstResult['vehicle'] ?? null;
-        $vehicleType = 'Unknown';
-        
-        if ($vehicleData && isset($vehicleData['type'])) {
-            $vehicleType = $vehicleData['type'];
-        }
-        
-        $jenisKendaraan = $this->mapVehicleType($vehicleType);
-
-        $existingKendaraan = Kendaraan::where('plat_nomor', $platNomor)->first();
-
-        if ($existingKendaraan) {
             return response()->json([
                 'success' => true,
-                'exists' => true,
-                'message' => 'Kendaraan sudah terdaftar',
-                'data' => $existingKendaraan,
-                'source' => 'platerecognizer'
+                'exists' => false,
+                'data' => [
+                    'plat_nomor' => $platNomor,
+                    'jenis_kendaraan' => $jenisKendaraan,
+                    'confidence' => round($confidence * 100, 2),
+                    'vehicle_type_raw' => $vehicleType
+                ],
+                'source' => 'platerecognizer',
+                'message' => 'Plat nomor berhasil dideteksi'
             ]);
+        } catch (RequestException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghubungi layanan deteksi plat nomor. Silakan coba lagi.'
+            ], 500);
+        } catch (ConnectException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan. Silakan coba lagi.'
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'exists' => false,
-            'data' => [
-                'plat_nomor' => $platNomor,
-                'jenis_kendaraan' => $jenisKendaraan,
-                'confidence' => round($confidence * 100, 2),
-                'vehicle_type_raw' => $vehicleType 
-            ],
-            'source' => 'platerecognizer',
-            'message' => 'Plat nomor berhasil dideteksi'
-        ]);
-
-    } catch (RequestException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal menghubungi layanan deteksi plat nomor. Silakan coba lagi.'
-        ], 500);
-        
-    } catch (ConnectException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'
-        ], 500);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Terjadi kesalahan. Silakan coba lagi.'
-        ], 500);
     }
-}
 
     /**
      * Normalize plate number untuk matching database
@@ -255,5 +262,4 @@ public function scanPlat(Request $request)
 
         return $mapping[$type] ?? 'lainnya';
     }
-
 }

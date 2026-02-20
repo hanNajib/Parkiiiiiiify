@@ -14,7 +14,7 @@ class LogAktivitasController extends Controller
      */
     public function index()
     {
-        $data = LogAktivitas::with(['user'])->search()->filter()->paginate(10)->withQueryString();
+        $data = LogAktivitas::with(['user'])->latest()->search()->filter()->paginate(10)->withQueryString();
         
         $stats = [
             'total_logs' => LogAktivitas::count(),
