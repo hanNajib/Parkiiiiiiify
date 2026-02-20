@@ -20,7 +20,6 @@ export default function CreateModal() {
     const { data, setData, post, processing, errors, reset } = useForm({
         plat_nomor: '',
         jenis_kendaraan: 'mobil',
-        pemilik: '',
         warna: '',
     });
 
@@ -148,22 +147,6 @@ export default function CreateModal() {
                             )}
                         </Field>
 
-                        <Field>
-                            <Label htmlFor="pemilik">Pemilik</Label>
-                            <Input 
-                                id="pemilik" 
-                                name="pemilik" 
-                                type="text"
-                                value={data.pemilik}
-                                onChange={(e) => setData('pemilik', e.target.value)}
-                                placeholder="Nama pemilik kendaraan"
-                                className={errors.pemilik ? 'border-destructive' : ''}
-                                disabled={processing}
-                            />
-                            {errors.pemilik && (
-                                <p className="text-sm text-destructive mt-1">{errors.pemilik}</p>
-                            )}
-                        </Field>
 
                         <Field>
                             <Label htmlFor="warna">Warna</Label>

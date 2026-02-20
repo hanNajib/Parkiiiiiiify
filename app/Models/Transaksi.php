@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Traits\HasSearchAndFilter;
 use App\Traits\Loggable;
+use App\Traits\TenantAware;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class Transaksi extends Model
 {
-    use HasSearchAndFilter, Loggable;
+    use HasSearchAndFilter, Loggable, TenantAware;
 
     protected $table = 'transaksi';
     protected $guarded = [];
@@ -53,22 +54,38 @@ class Transaksi extends Model
         return $query;
     }
 
-    public function kendaraan()
+    /**
+     * Get the vehicle for this transaction
+     * Relationship to central database model
+     */
+    public function kendaraan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Kendaraan::class);
+        return $this->belongsTo(Kendaraan::class, 'kendaraan_id');
     }
 
-    public function tarif()
+    /**
+     * Get the tariff for this transaction
+     * Relationship within tenant database
+     */
+    public function tarif(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Tarif::class);
     }
 
-    public function petugas()
+    /**
+     * Get the attendant for this transaction
+     * Relationship to central database model
+     */
+    public function petugas(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'petugas_id');
     }
 
-    public function areaParkir()
+    /**
+     * Get the parking area for this transaction
+     * Relationship within tenant database
+     */
+    public function areaParkir(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(AreaParkir::class);
     }

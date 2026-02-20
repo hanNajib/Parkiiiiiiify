@@ -122,7 +122,7 @@ class TarifParkirController extends Controller
     }
 
     /**
-     * 
+     * Show tarif for a specific area parkir
      */
     public function area(AreaParkir $areaParkir)
     {

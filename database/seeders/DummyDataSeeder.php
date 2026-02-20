@@ -152,7 +152,6 @@ class DummyDataSeeder extends Seeder
                 'plat_nomor' => $plate,
                 'jenis_kendaraan' => $faker->randomElement($jenisList),
                 'warna' => $faker->safeColorName(),
-                'pemilik' => $faker->name(),
                 'user_id' => $faker->randomElement($userIds),
             ]);
         }

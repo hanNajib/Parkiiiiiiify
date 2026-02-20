@@ -2,16 +2,15 @@ import { SidebarLayout } from '@/layout/SidebarLayout'
 import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { IconCar, IconSearch, IconUser } from '@tabler/icons-react'
+import { IconCar, IconSearch } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Kendaraan, PaginatedData, User } from '@/types'
+import { Kendaraan, PaginatedData } from '@/types'
 import DashboardHeader from '@/components/dashboard-header'
 import StatCard from '@/components/StatCard'
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuGroup } from '@/components/ui/dropdown-menu'
 import { CarFront, EllipsisVertical, Motorbike, Trash, Truck } from 'lucide-react'
 import { ConfirmDelete } from '@/components/confirmModal'
-import usersRoute from '@/routes/users'
 import { router } from '@inertiajs/react'
 import kendaraanRoute from '@/routes/kendaraan'
 import CreateModal from './CreateModal'
@@ -160,9 +159,6 @@ export default function Index({ kendaraan, stats, filter }: Props) {
                             <div className="font-medium text-foreground">
                               {kendaraan.plat_nomor}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {kendaraan.pemilik}
-                            </div>
                           </div>
                         </div>
                       </td>
@@ -194,7 +190,7 @@ export default function Index({ kendaraan, stats, filter }: Props) {
                             <DropdownMenuGroup>
                               <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                               <EditModal kendaraan={kendaraan}></EditModal>
-                              <ConfirmDelete deleteUrl={usersRoute.destroy(kendaraan.id).url}>
+                              <ConfirmDelete deleteUrl={kendaraanRoute.destroy(kendaraan.id).url}>
                                 <DropdownMenuItem variant='destructive' onSelect={(e) => e.preventDefault()}>
                                   <Trash/>Hapus
                                 </DropdownMenuItem>

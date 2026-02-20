@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\AreaParkir;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,16 +37,24 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $areaParkir = [];
+
+        if (app()->has(Tenant::class)) {
+            $user = $request->user();
+            
+            // Gunakan method yang sudah ada di User model
+            if ($user) {
+                $areaParkir = $user->getAccessibleAreas();
+            }
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
             ],
-            'areaParkir' => AreaParkir::where('is_active', true)
-                ->select('id', 'nama', 'lokasi')
-                ->orderBy('nama')
-                ->get(),
+            'areaParkir' => $areaParkir,
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error' => fn() => $request->session()->get('error'),

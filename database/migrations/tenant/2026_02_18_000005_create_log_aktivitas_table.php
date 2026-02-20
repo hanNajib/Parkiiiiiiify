@@ -6,14 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('log_aktivitas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id')->comment('FK to central users table');
             $table->string('role');
             $table->string('action', 50);
             $table->string('description');
@@ -21,8 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('target_id')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->timestamps();
-            
-            // Indexes for performance
+
             $table->index('role');
             $table->index('action');
             $table->index('created_at');
@@ -32,9 +28,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('log_aktivitas');

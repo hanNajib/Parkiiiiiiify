@@ -184,7 +184,7 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Parkify - Sistem Manajemen Parkir Modern" />
+            <Head title="Sistem Manajemen Parkir Modern" />
 
             <div className="min-h-screen bg-linear-to-b lg:px-8 from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900">
                 <motion.nav
@@ -485,7 +485,7 @@ export default function Welcome() {
                                     {
                                         icon: Car,
                                         title: 'Database Kendaraan',
-                                        description: 'Pencatatan lengkap: plat nomor, jenis kendaraan (Motor/Mobil/Lainnya), nama pemilik, warna. Prevent duplicate kendaraan parkir dengan barcode scanner.',
+                                        description: 'Pencatatan lengkap: plat nomor, jenis kendaraan (Motor/Mobil/Lainnya), warna. Prevent duplicate kendaraan parkir dengan barcode scanner.',
                                         color: 'text-green-500',
                                         bgColor: 'bg-green-500/10'
                                     },

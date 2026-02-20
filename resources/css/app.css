@@ -12,6 +12,10 @@
     "Outfit", 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+* {
+  scroll-behavior: smooth;
+}
+
 @theme inline {
   --font-display: "Inter", "sans-serif";
   --color-primary-500: oklch(0.55 0.25 10);

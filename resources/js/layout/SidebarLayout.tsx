@@ -25,7 +25,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  // Update cache when areaParkir changes
   useEffect(() => {
     if (areaParkir?.length) {
       setCachedAreaParkir(areaParkir);
@@ -55,6 +54,7 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
     };
 
     rafId = requestAnimationFrame(raf);
+    
 
     return () => {
       cancelAnimationFrame(rafId);
@@ -62,7 +62,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
     };
   }, [sidebarOpen]);
 
-  // Use cached area parkir if current areaParkir is from server but prefer server data
   const displayAreas = areaParkir?.length ? areaParkir : cachedAreaParkir;
 
   const transaksiLink: SidebarLinkType = useMemo(() => {
@@ -72,7 +71,6 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
       role: ['petugas'] as string[],
     })) : [];
 
-    // Add "Lihat Semua Area" at the top
     const items = [
       {
         label: "Lihat Semua Area",
@@ -94,7 +92,7 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
     };
   }, [displayAreas]);
 
-  const allLinks = [...links, transaksiLink];
+  const allLinks = displayAreas?.length ? [...links, transaksiLink] : links;
 
   const filteredLinks = allLinks.filter((link) => {
     if (link.role === '*') return true;
@@ -138,7 +136,7 @@ export const SidebarLayout = ({ children }: PropsWithChildren) => {
 
         <div className="flex flex-1 overflow-hidden">
           <main ref={scrollRef} className="flex p-7 h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background shadow-sm md:p-10">
-            <div ref={contentRef} className="min-h-full">
+            <div ref={contentRef} className="min-h-screen">
               {children}
             </div>
           </main>

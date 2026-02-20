@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\AreaParkir;
 use App\Models\Kendaraan;
+use App\Models\PetugasArea;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,14 @@ class TransaksiController extends Controller
 {
     public function selectArea()
     {
-        $areaParkir = AreaParkir::where('is_active', true)->get();
+        // Hanya tampil area dimana user terdaftar di petugas_area dan aktif
+        $areaParkir = AreaParkir::where('is_active', true)
+            ->whereHas('petugas', function ($query) {
+                $query->where('user_id', Auth::id())
+                    ->where('is_active', true);
+            })
+            ->get();
+
         return Inertia::render('_petugas/transaksi/SelectArea', [
             'areaParkir' => $areaParkir
         ]);
@@ -25,6 +33,16 @@ class TransaksiController extends Controller
     public function index(Request $request, $areaParkirId)
     {
         $areaParkir = AreaParkir::findOrFail($areaParkirId);
+
+        // Check apakah petugas terdaftar di area ini
+        $isPetugasRegistered = PetugasArea::where('area_parkir_id', $areaParkirId)
+            ->where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->exists();
+
+        if (!$isPetugasRegistered) {
+            abort(403, 'Anda tidak terdaftar sebagai petugas di area parkir ini.');
+        }
 
         $data = Transaksi::with(['kendaraan', 'tarif', 'petugas', 'areaParkir'])
             ->where('area_parkir_id', $areaParkirId)
@@ -47,7 +65,7 @@ class TransaksiController extends Controller
             ->pluck('kendaraan_id')
             ->toArray();
 
-        $kendaraanList = Kendaraan::select('id', 'plat_nomor', 'jenis_kendaraan', 'pemilik', 'warna')
+        $kendaraanList = Kendaraan::select('id', 'plat_nomor', 'jenis_kendaraan', 'warna')
             ->whereNotIn('id', $kendaraanParked)
             ->get();
 
@@ -68,10 +86,21 @@ class TransaksiController extends Controller
     public function store(Request $request, $areaParkirId)
     {
         $validated = $request->validate([
-            'kendaraan_id' => 'required|exists:kendaraan,id',
+            'kendaraan_id' => 'required|exists:mysql.kendaraan,id',
         ]);
 
         $areaParkir = AreaParkir::findOrFail($areaParkirId);
+
+        // Check apakah petugas terdaftar di area ini
+        $isPetugasRegistered = PetugasArea::where('area_parkir_id', $areaParkirId)
+            ->where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->exists();
+
+        if (!$isPetugasRegistered) {
+            abort(403, 'Anda tidak terdaftar sebagai petugas di area parkir ini.');
+        }
+
         $kendaraan = Kendaraan::findOrFail($validated['kendaraan_id']);
 
         // Check for existing ongoing transaction

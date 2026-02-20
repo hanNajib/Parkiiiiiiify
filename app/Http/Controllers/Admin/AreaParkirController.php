@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AreaParkir;
+use App\Models\Tenant;
 use App\Models\Transaksi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -63,13 +65,19 @@ class AreaParkirController extends Controller
     {
         $area = AreaParkir::findOrFail($id);
         
-        // Ambil semua petugas
-        $allPetugas = \App\Models\User::where('role', 'petugas')->get();
+        $query = User::where('role', 'petugas');
+
+        if (app()->has(Tenant::class)) {
+            $tenant = app(Tenant::class);
+            $query->whereHas('tenants', function ($q) use ($tenant) {
+                $q->where('tenant_id', $tenant->id);
+            });
+        }
+
+        $allPetugas = $query->get();
         
-        // Ambil petugas yang sudah di-assign ke area ini
         $assignedPetugasIds = $area->petugas()->pluck('user_id')->toArray();
         
-        // Tambahkan info assigned ke setiap petugas
         $petugasWithStatus = $allPetugas->map(function ($p) use ($assignedPetugasIds) {
             return [
                 'id' => $p->id,

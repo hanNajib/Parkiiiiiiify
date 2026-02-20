@@ -31,6 +31,11 @@ trait Loggable
         if (!Auth::check()) return;
 
         try {
+            $tenantId = null;
+            if (app()->has(\App\Models\Tenant::class)) {
+                $tenantId = app(\App\Models\Tenant::class)->id;
+            }
+
             LogActivityJob::dispatch(
                 userId: Auth::id(),
                 role: Auth::user()->role,
@@ -39,6 +44,7 @@ trait Loggable
                 targetType: get_class($model),
                 targetId: $model->id,
                 ipAddress: request()->ip(),
+                tenantId: $tenantId,
             );
         } catch (\Exception $e) {
             Log::error('Failed to dispatch activity log', [

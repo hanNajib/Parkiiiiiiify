@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tarif', function (Blueprint $table) {
@@ -30,37 +27,13 @@ return new class extends Migration
                 'lainnya'
             ])->default('lainnya');
 
-            /*
-            |--------------------------------------------------------------------------
-            | INTERVAL / BLOCK CONFIG
-            |--------------------------------------------------------------------------
-            */
-
-            $table->integer('interval_menit')->nullable(); // ganti durasi_awal_menit
+            $table->integer('interval_menit')->nullable();
             $table->decimal('harga_awal', 12, 2)->nullable();
             $table->decimal('harga_lanjutan', 12, 2)->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | PROGRESSIVE CONFIG
-            |--------------------------------------------------------------------------
-            */
-
             $table->json('progressive_rules')->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | LIMITER
-            |--------------------------------------------------------------------------
-            */
-
             $table->decimal('maksimal_per_hari', 12, 2)->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | TIME BASED (Optional Advanced)
-            |--------------------------------------------------------------------------
-            */
 
             $table->time('berlaku_dari')->nullable();
             $table->time('berlaku_sampai')->nullable();
@@ -68,12 +41,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();
-
-            /*
-            |--------------------------------------------------------------------------
-            | INDEX & CONSTRAINT
-            |--------------------------------------------------------------------------
-            */
 
             $table->index('rule_type');
 
