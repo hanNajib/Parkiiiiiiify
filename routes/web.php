@@ -17,7 +17,7 @@ use Laravel\Fortify\Features;
 
 Route::middleware('tenant')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Welcome', [
+        return Inertia::render('Home/welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register') && Features::enabled(Features::registration()),
             'laravelVersion' => app()->version(),
